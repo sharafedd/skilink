@@ -1,0 +1,51 @@
+/* Tailwind v4: single import */
+@import "tailwindcss";
+
+/* Design tokens (v4) */
+@theme {
+  /* Skilink greens */
+  --color-brand-50:  #f1f6f0;
+  --color-brand-100: #dfeadb;
+  --color-brand-200: #bfd5b8;
+  --color-brand-300: #9cbf93;
+  --color-brand-400: #7aa973;
+  --color-brand-500: #5d8f59;   /* primary */
+  --color-brand-600: #4b7247;
+  --color-brand-700: #3d5b3a;
+  --color-brand-800: #2f452d;
+  --color-brand-900: #233422;
+
+  /* Skilink orange (accent) */
+  --color-accent-50:  #fff3e8;
+  --color-accent-100: #ffe3c7;
+  --color-accent-200: #ffc592;
+  --color-accent-300: #ffa15a;
+  --color-accent-400: #ff7f2e;
+  --color-accent-500: #e86a1b;  /* primary accent */
+  --color-accent-600: #c15614;
+  --color-accent-700: #9b450f;
+  --color-accent-800: #76340b;
+  --color-accent-900: #552707;
+
+  /* Extras used in components */
+  --radius-xl2: 1rem; /* gives you rounded-xl2 */
+  --shadow-soft: 0 4px 14px rgba(0,0,0,0.08); /* gives you shadow-soft */
+}
+
+/* Global look */
+:root { color-scheme: light; }
+html, body { height: 100%; }
+body {
+  background-color: var(--color-brand-50);
+  color: #18181b; /* zinc-900 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shared card helper */
+.card {
+  border-radius: var(--radius-xl2);
+  border: 1px solid #f4f4f5; /* zinc-100 */
+  background-color: #fff;
+  box-shadow: var(--shadow-soft);
+}
