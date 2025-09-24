@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import Container from "@/components/shared/Container";
 import Logo from "@/components/shared/Logo";

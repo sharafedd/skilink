@@ -12,7 +12,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-dvh flex flex-col">
       <SiteHeader />
-      <SubHeaderServices durationSec={28} />
+      <SubHeaderServices />
       <main className="flex-1">
         {/* subtle gradient like your mock */}
         <div className="bg-gradient-to-b from-brand-100/40 to-brand-50">{children}</div>
