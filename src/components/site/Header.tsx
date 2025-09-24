@@ -101,8 +101,8 @@ export default function SiteHeader({ user }: { user: SessionUser | null }) {
           </button>
 
           {/* Centered logo (responsive height) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Logo className="!h-10 md:!h-12 lg:!h-16 shrink-0" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
+            <Logo className="!h-20 md:!h-20 lg:!h-24 shrink-0" />
           </div>
 
           {/* Right cluster: md shows search icon, sign in/orders, and profile */}
@@ -159,7 +159,7 @@ export default function SiteHeader({ user }: { user: SessionUser | null }) {
         <Container className="flex h-20 items-center justify-between gap-4 px-6">
           {/* left: logo + main nav */}
           <div className="flex items-center gap-6">
-            <Logo className="!h-16 shrink-0" />
+            <Logo className="!h-26 shrink-0" />
             <nav className="hidden lg:flex items-center gap-1">
               {siteMainNav.map((i) => (
                 <NavLink key={i.href} href={i.href}>
