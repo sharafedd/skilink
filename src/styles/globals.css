@@ -49,3 +49,23 @@ body {
   background-color: #fff;
   box-shadow: var(--shadow-soft);
 }
+
+/* --- Marquee utilities --- */
+@layer utilities {
+  @keyframes marquee-left {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* second copy aligns perfectly */
+  }
+  .animate-marquee {
+    animation: marquee-left var(--duration, 28s) linear infinite;
+    will-change: transform;
+  }
+}
+
+/* Optional fade at edges */
+.marquee-fade {
+  position: absolute; inset: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+          mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  pointer-events: none;
+}
