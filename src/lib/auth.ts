@@ -12,14 +12,20 @@ export async function getSession() {
   return supabase.auth.getSession(); // { data: { session }, error }
 }
 
-export async function getUser() {
+export async function getUser(): Promise<{ user: SessionUser | null; error: unknown | null }> {
   const supabase = await createSupabaseServerRO();
   const { data, error } = await supabase.auth.getUser();
-  if (error) return { user: null, error };
+  if (error || !data?.user) return { user: null, error };
+
   const u = data.user;
-  const user: SessionUser | null = u
-    ? { id: u.id, email: u.email ?? null, name: (u.user_metadata as any)?.name ?? null }
-    : null;
+  const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
+  const name = typeof meta.name === "string" ? meta.name : null;
+
+  const user: SessionUser = {
+    id: u.id,
+    email: u.email ?? null,
+    name,
+  };
   return { user, error: null };
 }
 
@@ -30,12 +36,12 @@ export async function clearSession() {
 }
 
 // --- compatibility shims ---
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<SessionUser | null> {
   const { user } = await getUser();
-  return user; // returns SessionUser | null
+  return user;
 }
 
 export async function getCurrentSession() {
   const { data } = await getSession();
-  return data.session; // returns Session | null
+  return data.session; // Session | null
 }
