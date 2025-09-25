@@ -1,4 +1,3 @@
-// src/app/(site)/saved/page.tsx
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
@@ -129,18 +128,14 @@ function Pagination({
       </div>
       <div className="flex gap-2">
         <Link
-          href={
-            page > 1 ? `/saved${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"
-          }
+          href={page > 1 ? `/saved${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"}
           aria-disabled={page <= 1}
           className={`rounded-md border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
         >
           Previous
         </Link>
         <Link
-          href={
-            page < totalPages ? `/saved${buildQueryString(baseParams, { page: String(page + 1) })}` : "#"
-          }
+          href={page < totalPages ? `/saved${buildQueryString(baseParams, { page: String(page + 1) })}` : "#"}
           aria-disabled={page >= totalPages}
           className={`rounded-md border px-3 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
         >
@@ -158,10 +153,7 @@ async function removeFavorite(formData: FormData) {
   const favId = String(formData.get("id") || "");
   if (!favId) return;
 
-  const [supabase, authUser] = await Promise.all([
-    createSupabaseServerRO(),
-    getCurrentUser(),
-  ]);
+  const [supabase, authUser] = await Promise.all([createSupabaseServerRO(), getCurrentUser()]);
   if (!authUser) return;
 
   // Resolve app user id from auth id
@@ -260,9 +252,7 @@ export default async function SavedPage({ searchParams }: { searchParams?: Searc
     if (projIds.length) {
       const { data: projs } = await supabase
         .from("projects")
-        .select(
-          "id,title,status,budget_kind,budget_amount,hourly_min,hourly_max,city,country,created_at"
-        )
+        .select("id,title,status,budget_kind,budget_amount,hourly_min,hourly_max,city,country,created_at")
         .in("id", projIds);
       (projs as Project[] | null)?.forEach((p) => projMap.set(p.id, p));
     }
@@ -315,7 +305,9 @@ export default async function SavedPage({ searchParams }: { searchParams?: Searc
                         </TableCell>
                         <TableCell className="align-middle">
                           <div className="flex items-center justify-between gap-3">
-                            <span>{new Date(f.created_at).toLocaleString()}</span>
+                            <time suppressHydrationWarning dateTime={f.created_at}>
+                              {new Date(f.created_at).toLocaleString()}
+                            </time>
                             <form action={removeFavorite}>
                               <input type="hidden" name="id" value={f.id} />
                               <button className="rounded-md border px-2 py-1 text-xs" aria-label="Remove favorite">
@@ -431,7 +423,9 @@ export default async function SavedPage({ searchParams }: { searchParams?: Searc
                         <TableCell><ProviderLocation up={up} /></TableCell>
                         <TableCell className="align-middle">
                           <div className="flex items-center justify-between gap-3">
-                            <span>{new Date(f.created_at).toLocaleString()}</span>
+                            <time suppressHydrationWarning dateTime={f.created_at}>
+                              {new Date(f.created_at).toLocaleString()}
+                            </time>
                             <form action={removeFavorite}>
                               <input type="hidden" name="id" value={f.id} />
                               <button className="rounded-md border px-2 py-1 text-xs" aria-label="Remove favorite">

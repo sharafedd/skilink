@@ -101,40 +101,57 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
   const avgRating = reviews.length ? (reviews.reduce((s, r) => s + (r.rating ?? 0), 0) / reviews.length).toFixed(1) : null;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Header */}
-      <section className="space-y-2">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">{pr.display_name ?? "Provider"}</h1>
-          {pr.verified ? <Badge>Verified</Badge> : <Badge variant="outline">Unverified</Badge>}
-          {avgRating ? <Badge variant="outline">★ {avgRating}</Badge> : null}
+      <section className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold min-w-0 truncate">
+            {pr.display_name ?? "Provider"}
+          </h1>
+          <div className="flex flex-wrap gap-2">
+            {pr.verified ? <Badge>Verified</Badge> : <Badge variant="outline">Unverified</Badge>}
+            {avgRating ? <Badge variant="outline">★ {avgRating}</Badge> : null}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-4 text-sm">
+
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <div><span className="text-muted-foreground">Rate:&nbsp;</span>{pr.hourly_rate != null ? `${pr.hourly_rate} DZD/h` : "—"}</div>
           <div><span className="text-muted-foreground">Min project:&nbsp;</span>{pr.min_project_value != null ? `${pr.min_project_value} DZD` : "—"}</div>
           <div><span className="text-muted-foreground">Experience:&nbsp;</span>{pr.years_experience != null ? `${pr.years_experience} yrs` : "—"}</div>
           <div><span className="text-muted-foreground">Location:&nbsp;</span>{locText(pf)}</div>
         </div>
-        <div className="flex gap-2">
-          <Link href={`/providers/${encodeURIComponent(pr.user_id)}/invite`} className="rounded-md bg-black px-4 py-2 text-white">Invite to project</Link>
-          <Link href={`/messages?to=${pr.user_id}`} className="rounded-md border px-4 py-2">Contact</Link>
+
+        {/* Actions: stack on mobile */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link
+            href={`/providers/${encodeURIComponent(pr.user_id)}/invite`}
+            className="rounded-md bg-black px-4 py-2 text-white text-center"
+          >
+            Invite to project
+          </Link>
+          <Link
+            href={`/messages?to=${pr.user_id}`}
+            className="rounded-md border px-4 py-2 text-center"
+          >
+            Contact
+          </Link>
         </div>
       </section>
 
       {/* About */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">About</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-2">About</h2>
         <Card>
-          <CardContent className="p-4">
-            <p className="whitespace-pre-wrap">{pf?.bio ?? "No bio yet."}</p>
+          <CardContent className="p-4 sm:p-5">
+            <p className="whitespace-pre-wrap text-sm sm:text-base">{pf?.bio ?? "No bio yet."}</p>
             {pf?.website ? (
-              <p className="mt-3 text-sm">
+              <p className="mt-3 text-xs sm:text-sm">
                 <span className="text-muted-foreground">Website:&nbsp;</span>
-                <a href={pf.website} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">{pf.website}</a>
+                <a href={pf.website} className="text-blue-600 hover:underline break-words" target="_blank" rel="noreferrer">{pf.website}</a>
               </p>
             ) : null}
             {pf?.languages?.length ? (
-              <p className="mt-2 text-sm text-muted-foreground">Languages: {pf.languages.join(", ")}</p>
+              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">Languages: {pf.languages.join(", ")}</p>
             ) : null}
           </CardContent>
         </Card>
@@ -143,8 +160,8 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
       {/* Services & Skills */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardContent className="p-4">
-            <h3 className="text-lg font-semibold mb-3">Services</h3>
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="text-base sm:text-lg font-semibold mb-3">Services</h3>
             <div className="flex flex-wrap gap-2">
               {categories.length ? categories.map((c) => (
                 <Link key={c.id} href={`/providers?cat=${c.slug}`} className="hover:opacity-80">
@@ -155,8 +172,8 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <h3 className="text-lg font-semibold mb-3">Skills</h3>
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="text-base sm:text-lg font-semibold mb-3">Skills</h3>
             <div className="flex flex-wrap gap-2">
               {skills.length ? skills.map((s) => (
                 <Link key={s.id} href={`/providers?skill=${s.slug}`} className="hover:opacity-80">
@@ -170,44 +187,60 @@ export default async function ProviderDetailPage({ params }: { params: { id: str
 
       {/* Portfolio */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">Portfolio</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-2">Portfolio</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {portfolio.length ? portfolio.map((item) => (
             <Card key={item.id}>
               <CardContent className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">{item.title}</h4>
-                  <span className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleDateString()}</span>
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="font-semibold truncate">{item.title}</h4>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </span>
                 </div>
                 {item.media_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.media_url} alt={item.title} className="w-full rounded-md object-cover max-h-64" />
+                  <img
+                    src={item.media_url}
+                    alt={item.title}
+                    className="w-full rounded-md object-cover max-h-64"
+                  />
                 ) : null}
                 <p className="text-sm text-muted-foreground">{item.description ?? ""}</p>
               </CardContent>
             </Card>
           )) : (
-            <Card><CardContent className="p-6 text-center text-muted-foreground">No portfolio items yet.</CardContent></Card>
+            <Card>
+              <CardContent className="p-6 text-center text-muted-foreground">
+                No portfolio items yet.
+              </CardContent>
+            </Card>
           )}
         </div>
       </section>
 
       {/* Reviews */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">Reviews</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-2">Reviews</h2>
         <div className="space-y-3">
           {reviews.length ? reviews.map((r) => (
             <Card key={r.id}>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <Badge variant="outline">★ {r.rating}</Badge>
-                  <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {new Date(r.created_at).toLocaleDateString()}
+                  </span>
                 </div>
                 <p className="mt-2 text-sm">{r.comment ?? ""}</p>
               </CardContent>
             </Card>
           )) : (
-            <Card><CardContent className="p-6 text-center text-muted-foreground">No reviews yet.</CardContent></Card>
+            <Card>
+              <CardContent className="p-6 text-center text-muted-foreground">
+                No reviews yet.
+              </CardContent>
+            </Card>
           )}
         </div>
       </section>

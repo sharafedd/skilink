@@ -39,6 +39,8 @@ type Category = { id: string; name: string; slug: string };
 
 const PAGE_SIZE = 20;
 
+/* ---------------- utils ---------------- */
+
 function buildQueryString(
   params: Record<string, string | undefined>,
   updates: Record<string, string | undefined>
@@ -63,6 +65,8 @@ function LocationText(p?: ProfileRow) {
   const parts = [p.commune ?? p.city, p.wilaya].filter(Boolean).join(", ");
   return parts || "—";
 }
+
+/* ---------------- page ---------------- */
 
 export default async function ProvidersPage({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = await createSupabaseServerRO();
@@ -249,7 +253,7 @@ export default async function ProvidersPage({ searchParams }: { searchParams?: S
             return (
               <Card key={pr.user_id}>
                 <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <Link
                       href={`/providers/${pr.user_id}`}
                       className="text-lg font-semibold hover:underline truncate"
@@ -259,13 +263,17 @@ export default async function ProvidersPage({ searchParams }: { searchParams?: S
                     {pr.verified ? <Badge>Verified</Badge> : <Badge variant="outline">Unverified</Badge>}
                   </div>
 
-                  <div className="flex flex-wrap gap-2 text-sm">
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
                     {cats.map((n) => (
                       <Badge key={n} variant="outline">{n}</Badge>
                     ))}
-                    <span className="ml-auto text-xs text-muted-foreground">
+                    <time
+                      suppressHydrationWarning
+                      dateTime={pr.created_at}
+                      className="ml-auto text-xs text-muted-foreground"
+                    >
                       {new Date(pr.created_at).toLocaleDateString()}
-                    </span>
+                    </time>
                   </div>
 
                   <div className="flex flex-wrap gap-4 text-sm">

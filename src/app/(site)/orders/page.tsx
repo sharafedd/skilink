@@ -43,7 +43,10 @@ function qs(base: Record<string, string | undefined>, up: Record<string, string 
   const merged = { ...base, ...up };
   for (const [k, v] of Object.entries(merged)) {
     if (v && v.length) sp.set(k, v);
+    if (v === "") sp.delete(k);
   }
+  // If tab or role changes, reset to page 1
+  if ("t" in up || "r" in up) sp.set("page", "1");
   const s = sp.toString();
   return s ? `?${s}` : "";
 }
@@ -146,8 +149,8 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
 
   if (!auth) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold">Orders</h1>
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+        <h1 className="text-2xl sm:text-3xl font-bold">Orders</h1>
         <Card>
           <CardContent className="p-6 text-sm">
             Please <Link href="/login" className="text-blue-600 hover:underline">sign in</Link> to view your orders.
@@ -160,8 +163,8 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
   const me = await resolveOrCreateAppUser(supabase, auth.id, auth.email ?? null);
   if (!me) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold">Orders</h1>
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+        <h1 className="text-2xl sm:text-3xl font-bold">Orders</h1>
         <Card><CardContent className="p-6 text-sm">We couldn’t find your account record.</CardContent></Card>
       </div>
     );
@@ -222,23 +225,27 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Orders</h1>
-          <div className="inline-flex rounded-md border p-1">
-            {(["invoices", "payouts"] as Tab[]).map((tab) => (
-              <Link
-                key={tab}
-                href={`/orders${qs(baseParams, { t: tab, r: tab === "invoices" ? r : undefined, page: "1" })}`}
-                className={`px-3 py-1.5 text-sm rounded-md ${t === tab ? "bg-black text-white" : ""}`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Link>
-            ))}
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        {/* Header + tabs */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl sm:text-3xl font-bold">Orders</h1>
+          <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+            <div className="inline-flex rounded-md border p-1 min-w-max">
+              {(["invoices", "payouts"] as Tab[]).map((tab) => (
+                <Link
+                  key={tab}
+                  href={`/orders${qs(baseParams, { t: tab, r: tab === "invoices" ? r : undefined, page: "1" })}`}
+                  className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${t === tab ? "bg-black text-white" : ""}`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* Role filter */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">Your invoices as buyer or provider</div>
           <div className="inline-flex rounded-md border p-1">
             {[
@@ -257,8 +264,60 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
           </div>
         </div>
 
-        <Card>
-          <CardContent className="p-0">
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {invoices.length ? invoices.map((inv) => {
+            const role = roleByContract.get(inv.contract_id) ?? "buyer";
+            const projId = projectByContract.get(inv.contract_id);
+            const proj = projId ? projMap.get(projId) : undefined;
+
+            return (
+              <Card key={inv.id}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium line-clamp-2">
+                      {proj ? (
+                        <Link href={`/projects/${proj.id}`} className="hover:underline">
+                          {proj.title}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">[unknown project]</span>
+                      )}
+                    </div>
+                    <StatusBadge s={inv.status} />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Role: <Badge variant="outline">{role}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    <span className="rounded border px-2 py-1">
+                      {inv.amount.toLocaleString()} {inv.currency}
+                    </span>
+                    <span className="text-muted-foreground">
+                      Issued: {new Date(inv.issued_at).toLocaleDateString()}
+                    </span>
+                    <span className="text-muted-foreground">
+                      Paid: {inv.paid_at ? new Date(inv.paid_at).toLocaleDateString() : "—"}
+                    </span>
+                  </div>
+                  {/* Quick action for buyers on issued invoices */}
+                  {role === "buyer" && inv.status === "issued" ? (
+                    <form action={markInvoicePaid} className="pt-1">
+                      <input type="hidden" name="invoice_id" value={inv.id} />
+                      <button className="w-full rounded-md border px-3 py-2 text-sm">Mark paid</button>
+                    </form>
+                  ) : null}
+                </CardContent>
+              </Card>
+            );
+          }) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No invoices found.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -327,7 +386,7 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
         </Card>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
             Page <span className="font-medium">{page}</span> of{" "}
             <span className="font-medium">{totalPages}</span>
@@ -336,14 +395,14 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
             <Link
               href={page > 1 ? `/orders${qs(baseParams, { page: String(page - 1) })}` : "#"}
               aria-disabled={page <= 1}
-              className={`rounded-md border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+              className={`rounded-md border px-4 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
             >
               Previous
             </Link>
             <Link
               href={page < totalPages ? `/orders${qs(baseParams, { page: String(page + 1) })}` : "#"}
               aria-disabled={page >= totalPages}
-              className={`rounded-md border px-3 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
+              className={`rounded-md border px-4 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
             >
               Next
             </Link>
@@ -366,21 +425,48 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
     const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Orders</h1>
-          <div className="inline-flex rounded-md border p-1">
-            <Link href={`/orders${qs(baseParams, { t: "invoices", page: "1" })}`} className="px-3 py-1.5 text-sm rounded-md">
-              Invoices
-            </Link>
-            <Link href={`/orders${qs(baseParams, { t: "payouts", page: "1" })}`} className="px-3 py-1.5 text-sm rounded-md bg-black text-white">
-              Payouts
-            </Link>
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl sm:text-3xl font-bold">Orders</h1>
+          <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+            <div className="inline-flex rounded-md border p-1 min-w-max">
+              <Link href={`/orders${qs(baseParams, { t: "invoices", page: "1" })}`} className="px-3 py-1.5 text-sm rounded-md">
+                Invoices
+              </Link>
+              <Link href={`/orders${qs(baseParams, { t: "payouts", page: "1" })}`} className="px-3 py-1.5 text-sm rounded-md bg-black text-white">
+                Payouts
+              </Link>
+            </div>
           </div>
         </div>
 
-        <Card>
-          <CardContent className="p-0">
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {payouts.length ? payouts.map((p) => (
+            <Card key={p.id}>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="font-medium">{p.amount.toLocaleString()} {p.currency}</div>
+                  <StatusBadge s={p.status} />
+                </div>
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <span className="text-muted-foreground">
+                    Created: {new Date(p.created_at).toLocaleDateString()}
+                  </span>
+                  <span className="text-muted-foreground">
+                    Processed: {p.processed_at ? new Date(p.processed_at).toLocaleDateString() : "—"}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No payouts yet.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -423,7 +509,7 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
         </Card>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
             Page <span className="font-medium">{page}</span> of{" "}
             <span className="font-medium">{totalPages}</span>
@@ -432,14 +518,14 @@ export default async function OrdersPage({ searchParams }: { searchParams?: Sear
             <Link
               href={page > 1 ? `/orders${qs(baseParams, { page: String(page - 1) })}` : "#"}
               aria-disabled={page <= 1}
-              className={`rounded-md border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+              className={`rounded-md border px-4 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
             >
               Previous
             </Link>
             <Link
               href={page < totalPages ? `/orders${qs(baseParams, { page: String(page + 1) })}` : "#"}
               aria-disabled={page >= totalPages}
-              className={`rounded-md border px-3 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
+              className={`rounded-md border px-4 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
             >
               Next
             </Link>

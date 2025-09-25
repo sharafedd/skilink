@@ -27,6 +27,8 @@ type UserProfile = {
   languages: string[] | null;
 };
 
+/* ---------- Server actions ---------- */
+
 async function saveNotifications(formData: FormData) {
   "use server";
   const supabase = await createSupabaseServerRO();
@@ -73,11 +75,9 @@ async function savePreferences(formData: FormData) {
   if (!userId) return redirect("/settings");
 
   const currency = String(formData.get("currency") || "DZD").trim();
-  const timezone = String(formData.get("timezone") || "").trim() || null;
+  const timezone = (String(formData.get("timezone") || "").trim() || null) as string | null;
   const languagesStr = String(formData.get("languages") || "").trim();
-  const languages = languagesStr
-    ? languagesStr.split(",").map((s) => s.trim()).filter(Boolean)
-    : [];
+  const languages = languagesStr ? languagesStr.split(",").map((s) => s.trim()).filter(Boolean) : [];
 
   await Promise.all([
     supabase.from("user_settings").upsert({
@@ -115,7 +115,7 @@ async function deleteAccount(formData: FormData) {
   const userId = u?.id as string | undefined;
   if (!userId) return redirect("/settings");
 
-  // Soft delete the account (keep auth user/session intact)
+  // Soft delete the account (keep auth session intact)
   await supabase
     .from("users")
     .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
@@ -123,6 +123,8 @@ async function deleteAccount(formData: FormData) {
 
   redirect("/");
 }
+
+/* ---------- Page ---------- */
 
 export default async function SettingsPage() {
   const [authUser, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerRO()]);
@@ -149,19 +151,32 @@ export default async function SettingsPage() {
 
   const me = (urow as AppUser | null) ?? null;
 
+  if (!me) {
+    return (
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <Card>
+          <CardContent className="p-6 text-sm">
+            We couldn’t find your account record. If this persists, contact support.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const [{ data: srow }, { data: prow }] = await Promise.all([
-    supabase.from("user_settings").select("*").eq("user_id", me?.id ?? "").limit(1).maybeSingle(),
-    supabase.from("user_profiles").select("user_id,timezone,languages").eq("user_id", me?.id ?? "").limit(1).maybeSingle(),
+    supabase.from("user_settings").select("*").eq("user_id", me.id).limit(1).maybeSingle(),
+    supabase.from("user_profiles").select("user_id,timezone,languages").eq("user_id", me.id).limit(1).maybeSingle(),
   ]);
 
   const settings: UserSettings = (srow as UserSettings | null) ?? {
-    user_id: me?.id ?? "",
+    user_id: me.id,
     email_notifications: true,
     push_notifications: true,
     currency: "DZD",
   };
   const profile: UserProfile = (prow as UserProfile | null) ?? {
-    user_id: me?.id ?? "",
+    user_id: me.id,
     timezone: null,
     languages: [],
   };
@@ -173,7 +188,7 @@ export default async function SettingsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Settings</h1>
         <div className="text-sm text-muted-foreground">
-          Signed in as {me?.email ?? authUser.email ?? "user"}
+          Signed in as {me.email ?? authUser.email ?? "user"}
         </div>
       </div>
 
@@ -184,23 +199,23 @@ export default async function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
             <div>
               <div className="text-muted-foreground">Email</div>
-              <div>{me?.email ?? "—"}</div>
+              <div>{me.email ?? "—"}</div>
             </div>
             <div>
               <div className="text-muted-foreground">Role</div>
-              <div className="capitalize">{me?.role ?? "—"}</div>
+              <div className="capitalize">{me.role ?? "—"}</div>
             </div>
             <div>
               <div className="text-muted-foreground">Provider mode</div>
-              <div>{me?.is_provider ? "Enabled" : "Disabled"}</div>
+              <div>{me.is_provider ? "Enabled" : "Disabled"}</div>
             </div>
             <div>
               <div className="text-muted-foreground">Status</div>
-              <div>{me?.deleted_at ? "Deactivated" : "Active"}</div>
+              <div>{me.deleted_at ? "Deactivated" : "Active"}</div>
             </div>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            To change your email or password, go to your account page in authentication.
+            To change your email or password, go to your authentication account page.
           </p>
         </CardContent>
       </Card>
@@ -219,7 +234,7 @@ export default async function SettingsPage() {
               <span className="text-sm">Push notifications</span>
             </label>
             <div className="md:col-span-2 flex justify-end">
-              <button className="rounded-md bg-black px-4 py-2 text-white">Save</button>
+              <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">Save</button>
             </div>
           </form>
         </CardContent>
@@ -257,7 +272,7 @@ export default async function SettingsPage() {
               />
             </div>
             <div className="md:col-span-3 flex justify-end">
-              <button className="rounded-md bg-black px-4 py-2 text-white">Save</button>
+              <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">Save</button>
             </div>
           </form>
         </CardContent>
@@ -272,11 +287,19 @@ export default async function SettingsPage() {
           </p>
           <form action={deleteAccount} className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-2">
-              <label className="block text-sm text-muted-foreground">Type <code>DELETE</code> to confirm</label>
-              <input name="confirm" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="DELETE" />
+              <label className="block text-sm text-muted-foreground">
+                Type <code>DELETE</code> to confirm
+              </label>
+              <input
+                name="confirm"
+                className="mt-1 w-full rounded-md border px-3 py-2"
+                placeholder="DELETE"
+                pattern="DELETE"
+                title='Type "DELETE"'
+              />
             </div>
             <div className="md:col-span-1 flex items-end">
-              <button className="w-full rounded-md border border-red-600 text-red-600 px-4 py-2">
+              <button type="submit" className="w-full rounded-md border border-red-600 text-red-600 px-4 py-2">
                 Delete account
               </button>
             </div>

@@ -70,11 +70,15 @@ export default async function MessagesPage() {
 
   if (!auth) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold">Messages</h1>
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+        <h1 className="text-2xl sm:text-3xl font-bold">Messages</h1>
         <Card>
           <CardContent className="p-6 text-sm">
-            Please <Link href="/login" className="text-blue-600 hover:underline">sign in</Link> to view your messages.
+            Please{" "}
+            <Link href="/login" className="text-blue-600 hover:underline">
+              sign in
+            </Link>{" "}
+            to view your messages.
           </CardContent>
         </Card>
       </div>
@@ -84,9 +88,13 @@ export default async function MessagesPage() {
   const me = await resolveOrCreateAppUser(supabase, auth.id, auth.email ?? null);
   if (!me) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold">Messages</h1>
-        <Card><CardContent className="p-6 text-sm">We couldn’t find your account record.</CardContent></Card>
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+        <h1 className="text-2xl sm:text-3xl font-bold">Messages</h1>
+        <Card>
+          <CardContent className="p-6 text-sm">
+            We couldn’t find your account record.
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -105,10 +113,15 @@ export default async function MessagesPage() {
 
   if (convoList.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Messages</h1>
-          <Link href="/providers" className="rounded-md border px-3 py-2 text-sm">Find providers</Link>
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl sm:text-3xl font-bold">Messages</h1>
+          <Link
+            href="/providers"
+            className="rounded-md border px-4 py-2 text-sm text-center"
+          >
+            Find providers
+          </Link>
         </div>
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
@@ -135,7 +148,9 @@ export default async function MessagesPage() {
     otherByConvo.set(c, other);
   }
 
-  const otherUserIds = Array.from(new Set(Array.from(otherByConvo.values()).filter((v): v is string => !!v)));
+  const otherUserIds = Array.from(
+    new Set(Array.from(otherByConvo.values()).filter((v): v is string => !!v))
+  );
   let profiles = new Map<string, ProfileLite>();
   if (otherUserIds.length) {
     const { data: profs } = await supabase
@@ -160,7 +175,9 @@ export default async function MessagesPage() {
   }
 
   // 4) Load project titles
-  const projectIds = Array.from(new Set(convoList.map((c) => c.project_id).filter(Boolean))) as string[];
+  const projectIds = Array.from(
+    new Set(convoList.map((c) => c.project_id).filter(Boolean))
+  ) as string[];
   const projMap = new Map<string, ProjectLite>();
   if (projectIds.length) {
     const { data: projs } = await supabase.from("projects").select("id,title").in("id", projectIds);
@@ -172,13 +189,19 @@ export default async function MessagesPage() {
     const la = latestByConvo.get(a.id)?.created_at ?? a.created_at;
     const lb = latestByConvo.get(b.id)?.created_at ?? b.created_at;
     return la < lb ? 1 : la > lb ? -1 : 0;
-    });
+  });
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Messages</h1>
-        <Link href="/providers" className="rounded-md border px-3 py-2 text-sm">Find providers</Link>
+    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold">Messages</h1>
+        <Link
+          href="/providers"
+          className="rounded-md border px-4 py-2 text-sm text-center"
+        >
+          Find providers
+        </Link>
       </div>
 
       <Card>
@@ -193,23 +216,39 @@ export default async function MessagesPage() {
 
               return (
                 <li key={c.id}>
-                  <Link href={`/messages/${c.id}`} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="truncate font-medium">{otherName}</div>
-                        {last ? (
-                          <time suppressHydrationWarning dateTime={last.created_at} className="shrink-0 text-xs text-muted-foreground">
-                            {new Date(last.created_at).toLocaleString()}
-                          </time>
-                        ) : null}
+                  <Link
+                    href={`/messages/${c.id}`}
+                    className="block px-4 py-4 hover:bg-muted/50 focus:bg-muted/50 focus:outline-none sm:px-5"
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Placeholder avatar bubble (initial) for mobile visual balance */}
+                      <div className="mt-0.5 hidden xs:flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-medium">
+                        {otherName.slice(0, 1).toUpperCase()}
                       </div>
-                      {proj ? (
-                        <div className="mt-0.5 text-xs text-muted-foreground">
-                          Project: <span className="font-medium">{proj.title}</span>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="truncate font-medium">{otherName}</div>
+                          {last ? (
+                            <time
+                              suppressHydrationWarning
+                              dateTime={last.created_at}
+                              className="shrink-0 text-xs text-muted-foreground"
+                            >
+                              {new Date(last.created_at).toLocaleString()}
+                            </time>
+                          ) : null}
                         </div>
-                      ) : null}
-                      <div className="mt-1 truncate text-sm text-muted-foreground">
-                        {last?.body ?? "No messages yet."}
+
+                        {proj ? (
+                          <div className="mt-0.5 text-xs text-muted-foreground truncate">
+                            Project: <span className="font-medium">{proj.title}</span>
+                          </div>
+                        ) : null}
+
+                        <div className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                          {last?.body ?? "No messages yet."}
+                        </div>
                       </div>
                     </div>
                   </Link>

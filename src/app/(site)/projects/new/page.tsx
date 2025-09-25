@@ -147,8 +147,8 @@ export default async function NewProjectPage({
   const [auth, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerRO()]);
   if (!auth) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Create a project</h1>
+      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Create a project</h1>
         <Card>
           <CardContent className="p-6 text-sm">
             Please{" "}
@@ -183,9 +183,10 @@ export default async function NewProjectPage({
   const err = searchParams?.err;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Create a project</h1>
+    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* Header stacks on mobile */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold">Create a project</h1>
         <Link href="/projects" className="text-sm text-blue-600 hover:underline">
           Back to projects
         </Link>
@@ -200,15 +201,15 @@ export default async function NewProjectPage({
       ) : null}
 
       <Card>
-        <CardContent className="p-6 space-y-5">
+        <CardContent className="p-4 sm:p-6 space-y-5">
           <form action={createProject} className="space-y-5">
             {inviteProviderId ? (
               <input type="hidden" name="invite_provider_id" value={inviteProviderId} />
             ) : null}
 
             {/* Basics */}
-            <div className="space-y-2">
-              <label className="block text-sm text-muted-foreground">Title</label>
+            <div className="space-y-1.5">
+              <label className="block text-xs sm:text-sm text-muted-foreground">Title</label>
               <input
                 name="title"
                 required
@@ -217,8 +218,8 @@ export default async function NewProjectPage({
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm text-muted-foreground">Description</label>
+            <div className="space-y-1.5">
+              <label className="block text-xs sm:text-sm text-muted-foreground">Description</label>
               <textarea
                 name="description"
                 rows={6}
@@ -228,39 +229,39 @@ export default async function NewProjectPage({
             </div>
 
             {/* Budget */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="md:col-span-1">
-                <label className="block text-sm text-muted-foreground">Budget type</label>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div>
+                <label className="block text-xs sm:text-sm text-muted-foreground">Budget type</label>
                 <select name="budget_kind" defaultValue="fixed" className="mt-1 w-full rounded-md border px-3 py-2 bg-white">
                   <option value="fixed">Fixed</option>
                   <option value="hourly">Hourly</option>
                 </select>
               </div>
-              <div className="md:col-span-1">
-                <label className="block text-sm text-muted-foreground">Fixed amount (DZD)</label>
+              <div>
+                <label className="block text-xs sm:text-sm text-muted-foreground">Fixed amount (DZD)</label>
                 <input name="budget_amount" placeholder="e.g., 120000" className="mt-1 w-full rounded-md border px-3 py-2" />
               </div>
-              <div className="md:col-span-1 grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-sm text-muted-foreground">Hourly min</label>
+                  <label className="block text-xs sm:text-sm text-muted-foreground">Hourly min</label>
                   <input name="hourly_min" placeholder="e.g., 1500" className="mt-1 w-full rounded-md border px-3 py-2" />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground">Hourly max</label>
+                  <label className="block text-xs sm:text-sm text-muted-foreground">Hourly max</label>
                   <input name="hourly_max" placeholder="e.g., 3000" className="mt-1 w-full rounded-md border px-3 py-2" />
                 </div>
               </div>
             </div>
 
-            {/* Timing */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="md:col-span-1">
-                <label className="block text-sm text-muted-foreground">Due date</label>
+            {/* Timing & Location */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div>
+                <label className="block text-xs sm:text-sm text-muted-foreground">Due date</label>
                 <input type="date" name="due_date" className="mt-1 w-full rounded-md border px-3 py-2" />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm text-muted-foreground">Location</label>
-                <div className="mt-1 flex items-center gap-4">
+                <label className="block text-xs sm:text-sm text-muted-foreground">Location</label>
+                <div className="mt-1 flex flex-wrap items-center gap-4">
                   <label className="flex items-center gap-2">
                     <input type="radio" name="location_type" value="remote" defaultChecked /> <span className="text-sm">Remote</span>
                   </label>
@@ -275,17 +276,17 @@ export default async function NewProjectPage({
             </div>
 
             {/* Address (optional) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div>
-                <label className="block text-sm text-muted-foreground">Country</label>
+                <label className="block text-xs sm:text-sm text-muted-foreground">Country</label>
                 <input name="country" placeholder="Algeria" className="mt-1 w-full rounded-md border px-3 py-2" />
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground">City</label>
+                <label className="block text-xs sm:text-sm text-muted-foreground">City</label>
                 <input name="city" placeholder="Algiers" className="mt-1 w-full rounded-md border px-3 py-2" />
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground">Address (optional)</label>
+                <label className="block text-xs sm:text-sm text-muted-foreground">Address (optional)</label>
                 <input name="address_line" className="mt-1 w-full rounded-md border px-3 py-2" />
               </div>
             </div>
@@ -298,9 +299,9 @@ export default async function NewProjectPage({
 
             {/* Categories */}
             <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">Categories</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Categories</div>
               {byParent.get(null)?.length ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2">
                   {byParent.get(null)!.map((top) => {
                     const children = byParent.get(top.id) ?? [];
                     return (
@@ -325,9 +326,9 @@ export default async function NewProjectPage({
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-2">
-              <Link href="/projects" className="rounded-md border px-4 py-2">
+            {/* Actions (stack on mobile) */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <Link href="/projects" className="rounded-md border px-4 py-2 text-center">
                 Cancel
               </Link>
               <button

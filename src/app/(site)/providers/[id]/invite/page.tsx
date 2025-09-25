@@ -147,8 +147,8 @@ export default async function ProviderInvitePage({ params }: { params: { id: str
 
   if (!auth) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Invite provider</h1>
+      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Invite provider</h1>
         <Card>
           <CardContent className="p-6 text-sm">
             Please{" "}
@@ -182,13 +182,13 @@ export default async function ProviderInvitePage({ params }: { params: { id: str
     .eq("user_id", providerId)
     .limit(1)
     .maybeSingle();
-  const providerName =
-    ((prov as ProviderNameRow | null)?.display_name ?? "Provider");
+  const providerName = ((prov as ProviderNameRow | null)?.display_name ?? "Provider");
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Invite {providerName}</h1>
+    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* Header stacks on mobile */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold">Invite {providerName}</h1>
         <Link
           href={`/providers/${providerId}`}
           className="text-sm text-blue-600 hover:underline"
@@ -198,14 +198,11 @@ export default async function ProviderInvitePage({ params }: { params: { id: str
       </div>
 
       <Card>
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="p-4 sm:p-6 space-y-4">
           {myProjects.length === 0 ? (
             <div className="text-sm text-muted-foreground">
               You have no eligible projects.{" "}
-              <Link
-                href="/projects/new"
-                className="text-blue-600 hover:underline"
-              >
+              <Link href="/projects/new" className="text-blue-600 hover:underline">
                 Create a project
               </Link>{" "}
               first.
@@ -214,7 +211,7 @@ export default async function ProviderInvitePage({ params }: { params: { id: str
             <form action={sendInvite} className="space-y-4">
               <input type="hidden" name="provider_id" value={providerId} />
               <div>
-                <label className="block text-sm text-muted-foreground">
+                <label className="block text-xs sm:text-sm text-muted-foreground">
                   Project
                 </label>
                 <select
@@ -230,7 +227,7 @@ export default async function ProviderInvitePage({ params }: { params: { id: str
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-muted-foreground">
+                <label className="block text-xs sm:text-sm text-muted-foreground">
                   Message (optional)
                 </label>
                 <textarea
@@ -240,10 +237,11 @@ export default async function ProviderInvitePage({ params }: { params: { id: str
                   placeholder="Introduce your project, timeline and budget…"
                 />
               </div>
-              <div className="flex items-center justify-end gap-2">
+              {/* Actions: stack on mobile */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <Link
                   href={`/providers/${providerId}`}
-                  className="rounded-md border px-4 py-2"
+                  className="rounded-md border px-4 py-2 text-center"
                 >
                   Cancel
                 </Link>

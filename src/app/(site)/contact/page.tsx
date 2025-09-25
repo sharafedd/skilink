@@ -63,7 +63,6 @@ async function submitContact(formData: FormData) {
   const message = String(formData.get("message") || "").trim();
   if (!subject && !message) return redirect("/contact");
 
-  // Store as a generic support ticket in `reports`
   const reason = subject ? `${subject}\n\n${message}` : message;
   await supabase.from("reports").insert({
     reporter_id: me.id,
@@ -72,7 +71,6 @@ async function submitContact(formData: FormData) {
     reason,
   });
 
-  // Ping all admins via notifications (optional)
   const { data: admins } = await supabase
     .from("users")
     .select("id")
@@ -99,10 +97,8 @@ export default async function ContactPage({
   searchParams?: { submitted?: string };
 }) {
   const [authUser, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerRO()]);
-
   const submitted = searchParams?.submitted === "1";
 
-  // Optional: show user email if signed in
   let me: AppUser | null = null;
   if (authUser) {
     const { data: u } = await supabase
@@ -115,22 +111,28 @@ export default async function ContactPage({
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Contact us</h1>
-        <Link href="/" className="text-sm text-blue-600 hover:underline">
+    <div className="mx-auto w-full max-w-xl md:max-w-2xl lg:max-w-3xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Contact us</h1>
+        <Link href="/" className="text-sm font-medium text-blue-600 hover:underline self-start sm:self-auto">
           Home
         </Link>
       </div>
 
+      {/* Submitted banner */}
       {submitted ? (
-        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm">
+        <div
+          role="status"
+          className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm"
+        >
           Thanks! Your message was sent. We’ll get back to you soon.
         </div>
       ) : null}
 
+      {/* Contact form */}
       <Card>
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="p-4 sm:p-6 space-y-4">
           <p className="text-sm text-muted-foreground">
             Questions, feedback, or an issue? Send us a message below.
           </p>
@@ -152,11 +154,14 @@ export default async function ContactPage({
                 <input
                   id="subject"
                   name="subject"
-                  className="mt-1 w-full rounded-md border px-3 py-2"
+                  className="mt-1 w-full rounded-md border px-3 py-3 text-base"
                   placeholder="Brief summary"
                   required
+                  inputMode="text"
+                  aria-required="true"
                 />
               </div>
+
               <div>
                 <label htmlFor="message" className="block text-sm text-muted-foreground">
                   Message
@@ -165,21 +170,31 @@ export default async function ContactPage({
                   id="message"
                   name="message"
                   rows={6}
-                  className="mt-1 w-full rounded-md border px-3 py-2"
+                  className="mt-1 w-full rounded-md border px-3 py-3 text-base"
                   placeholder="Describe your request…"
                   required
+                  aria-required="true"
                 />
               </div>
+
               {me?.email ? (
                 <div className="text-xs text-muted-foreground">
-                  From: <span className="font-medium">{me.email}</span>
+                  From: <span className="font-medium break-all">{me.email}</span>
                 </div>
               ) : null}
-              <div className="flex items-center justify-end gap-2">
-                <Link href="/" className="rounded-md border px-4 py-2">
+
+              {/* Actions: stack on mobile, inline on sm+ */}
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <Link
+                  href="/"
+                  className="w-full sm:w-auto text-center rounded-md border px-4 py-3 text-sm font-medium"
+                >
                   Cancel
                 </Link>
-                <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto rounded-md bg-black px-4 py-3 text-sm font-medium text-white"
+                >
                   Send
                 </button>
               </div>
@@ -188,15 +203,25 @@ export default async function ContactPage({
         </CardContent>
       </Card>
 
+      {/* Other contacts */}
       <Card>
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold">Other ways to reach us</h2>
-          <ul className="mt-2 list-disc pl-5 text-sm">
+        <CardContent className="p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold">Other ways to reach us</h2>
+          <ul className="mt-2 list-disc pl-5 text-sm space-y-1">
             <li>
-              Knowledge base: <Link href="/help" className="text-blue-600 hover:underline">Help Center</Link>
+              Knowledge base:{" "}
+              <Link href="/help" className="text-blue-600 hover:underline">
+                Help Center
+              </Link>
             </li>
-            <li>
-              Email: <a href="mailto:support@skilink.example" className="text-blue-600 hover:underline">support@skilink.example</a>
+            <li className="break-words">
+              Email:{" "}
+              <a
+                href="mailto:support@skilink.example"
+                className="text-blue-600 hover:underline"
+              >
+                support@skilink.example
+              </a>
             </li>
           </ul>
         </CardContent>

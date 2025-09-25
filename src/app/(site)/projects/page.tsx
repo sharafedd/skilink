@@ -98,72 +98,99 @@ function Filters({
   return (
     <Card>
       <CardContent className="p-4">
+        {/* On mobile: single column, labels above inputs; on md+: compact row layout */}
         <form action="/projects" method="GET" className="grid grid-cols-1 gap-3 md:grid-cols-5">
-          <div className="flex items-center gap-2 md:col-span-2">
-            <label htmlFor="q" className="text-sm text-muted-foreground w-20">Search</label>
-            <input
-              id="q"
-              name="q"
-              defaultValue={q}
-              placeholder="Project title…"
-              className="w-full rounded-md border px-3 py-2"
-            />
+          {/* Search */}
+          <div className="md:col-span-2">
+            <label htmlFor="q" className="block text-xs sm:text-sm text-muted-foreground mb-1 md:mb-0 md:inline-block md:w-20">
+              Search
+            </label>
+            <div className="md:inline-flex md:items-center md:gap-2 md:w-[calc(100%-5rem)] md:align-middle">
+              <input
+                id="q"
+                name="q"
+                defaultValue={q}
+                placeholder="Project title…"
+                className="w-full rounded-md border px-3 py-2"
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="budget" className="text-sm text-muted-foreground w-20">Budget</label>
-            <select
-              id="budget"
-              name="budget"
-              defaultValue={budget || ""}
-              className="w-full rounded-md border px-3 py-2 bg-white"
-            >
-              <option value="">All</option>
-              <option value="fixed">Fixed</option>
-              <option value="hourly">Hourly</option>
-            </select>
+          {/* Budget */}
+          <div>
+            <label htmlFor="budget" className="block text-xs sm:text-sm text-muted-foreground mb-1 md:mb-0 md:inline-block md:w-20">
+              Budget
+            </label>
+            <div className="md:inline-flex md:items-center md:gap-2 md:w-[calc(100%-5rem)]">
+              <select
+                id="budget"
+                name="budget"
+                defaultValue={budget || ""}
+                className="w-full rounded-md border px-3 py-2 bg-white"
+              >
+                <option value="">All</option>
+                <option value="fixed">Fixed</option>
+                <option value="hourly">Hourly</option>
+              </select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="city" className="text-sm text-muted-foreground w-20">City</label>
-            <input
-              id="city"
-              name="city"
-              defaultValue={city}
-              placeholder="e.g., Alger"
-              className="w-full rounded-md border px-3 py-2"
-            />
+          {/* City */}
+          <div>
+            <label htmlFor="city" className="block text-xs sm:text-sm text-muted-foreground mb-1 md:mb-0 md:inline-block md:w-20">
+              City
+            </label>
+            <div className="md:inline-flex md:items-center md:gap-2 md:w-[calc(100%-5rem)]">
+              <input
+                id="city"
+                name="city"
+                defaultValue={city}
+                placeholder="e.g., Alger"
+                className="w-full rounded-md border px-3 py-2"
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="cat" className="text-sm text-muted-foreground w-20">Category</label>
-            <input
-              id="cat"
-              name="cat"
-              defaultValue={cat}
-              placeholder="slug (e.g., plumbing)"
-              className="w-full rounded-md border px-3 py-2"
-            />
+          {/* Category */}
+          <div>
+            <label htmlFor="cat" className="block text-xs sm:text-sm text-muted-foreground mb-1 md:mb-0 md:inline-block md:w-20">
+              Category
+            </label>
+            <div className="md:inline-flex md:items-center md:gap-2 md:w-[calc(100%-5rem)]">
+              <input
+                id="cat"
+                name="cat"
+                defaultValue={cat}
+                placeholder="slug (e.g., plumbing)"
+                className="w-full rounded-md border px-3 py-2"
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="sort" className="text-sm text-muted-foreground w-20">Sort</label>
-            <select
-              id="sort"
-              name="sort"
-              defaultValue={sort || "newest"}
-              className="w-full rounded-md border px-3 py-2 bg-white"
-            >
-              <option value="newest">Newest</option>
-              <option value="budget_high">Highest budget</option>
-              <option value="hourly_high">Highest hourly</option>
-            </select>
+          {/* Sort */}
+          <div>
+            <label htmlFor="sort" className="block text-xs sm:text-sm text-muted-foreground mb-1 md:mb-0 md:inline-block md:w-20">
+              Sort
+            </label>
+            <div className="md:inline-flex md:items-center md:gap-2 md:w-[calc(100%-5rem)]">
+              <select
+                id="sort"
+                name="sort"
+                defaultValue={sort || "newest"}
+                className="w-full rounded-md border px-3 py-2 bg-white"
+              >
+                <option value="newest">Newest</option>
+                <option value="budget_high">Highest budget</option>
+                <option value="hourly_high">Highest hourly</option>
+              </select>
+            </div>
           </div>
 
-          <div className="md:col-span-5 flex items-center gap-2 md:justify-end">
+          {/* Actions */}
+          <div className="md:col-span-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-end">
             <Link
               href={`/projects${buildQueryString(baseParams, { q: "", budget: "", city: "", cat: "", sort: "newest", page: "1" })}`}
-              className="rounded-md border px-3 py-2"
+              className="rounded-md border px-3 py-2 text-center"
             >
               Reset
             </Link>
@@ -189,25 +216,21 @@ function Pagination({
   baseParams: Record<string, string | undefined>;
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-sm text-muted-foreground">
         Page <span className="font-medium">{page}</span> of{" "}
         <span className="font-medium">{totalPages}</span>
       </div>
       <div className="flex gap-2">
         <Link
-          href={
-            page > 1 ? `/projects${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"
-          }
+          href={page > 1 ? `/projects${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"}
           aria-disabled={page <= 1}
           className={`rounded-md border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
         >
           Previous
         </Link>
         <Link
-          href={
-            page < totalPages ? `/projects${buildQueryString(baseParams, { page: String(page + 1) })}` : "#"
-          }
+          href={page < totalPages ? `/projects${buildQueryString(baseParams, { page: String(page + 1) })}` : "#"}
           aria-disabled={page >= totalPages}
           className={`rounded-md border px-3 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
         >
@@ -256,7 +279,7 @@ export default async function ProjectsPage({
       if (!projectIdsByCategory.length) {
         // No matches for this category -> show empty state quickly
         return (
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
             <Header />
             <Filters q={q} budget={budget} city={city} cat={cat} sort={sort} currentPage={page} />
             <p className="text-sm text-muted-foreground">No projects found.</p>
@@ -266,7 +289,7 @@ export default async function ProjectsPage({
     } else {
       // Unknown category slug -> empty
       return (
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
           <Header />
           <Filters q={q} budget={budget} city={city} cat={cat} sort={sort} currentPage={page} />
           <p className="text-sm text-muted-foreground">No projects found.</p>
@@ -306,7 +329,7 @@ export default async function ProjectsPage({
   if (error) {
     return (
       <div className="p-6">
-        <h1 className="text-3xl font-bold mb-4">Projects</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4">Projects</h1>
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
           Failed to load projects: {error.message}
         </div>
@@ -328,14 +351,15 @@ export default async function ProjectsPage({
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
       <Header />
 
       <Filters q={q} budget={budget} city={city} cat={cat} sort={sort} currentPage={page} />
 
       <Card>
-        <CardContent className="p-0">
-          <Table>
+        {/* Make the table scrollable on small screens */}
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[32%]">Title</TableHead>
@@ -362,7 +386,11 @@ export default async function ProjectsPage({
                         {p.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(p.created_at).toLocaleString()}</TableCell>
+                    <TableCell>
+                      <time suppressHydrationWarning dateTime={p.created_at}>
+                        {new Date(p.created_at).toLocaleString()}
+                      </time>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -377,9 +405,9 @@ export default async function ProjectsPage({
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Pagination page={page} totalPages={totalPages} baseParams={baseParams} />
-        <Link href="/projects/new" className="rounded-md bg-black px-4 py-2 text-white">
+        <Link href="/projects/new" className="rounded-md bg-black px-4 py-2 text-white text-center">
           Post a project
         </Link>
       </div>
@@ -391,9 +419,9 @@ export default async function ProjectsPage({
 
 function Header() {
   return (
-    <div className="flex items-center justify-between">
-      <h1 className="text-3xl font-bold">Projects</h1>
-      <Link href="/projects/new" className="rounded-md border px-3 py-2 text-sm">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <h1 className="text-2xl sm:text-3xl font-bold">Projects</h1>
+      <Link href="/projects/new" className="rounded-md border px-3 py-2 text-sm text-center">
         Post a project
       </Link>
     </div>

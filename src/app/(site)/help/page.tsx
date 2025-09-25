@@ -85,32 +85,40 @@ export default async function HelpPage({ searchParams }: { searchParams?: Search
   const submitted = searchParams?.submitted === "1";
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Help Center</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Help Center</h1>
           <p className="text-sm text-muted-foreground">
             Find answers or send us a request. We typically respond within 24–48h.
           </p>
         </div>
-        <Link href="/providers" className="rounded-md border px-3 py-2 text-sm">Browse providers</Link>
+        <Link
+          href="/providers"
+          className="rounded-md border px-4 py-2 text-sm text-center sm:self-start"
+        >
+          Browse providers
+        </Link>
       </div>
 
       {/* Success note */}
       {submitted ? (
-        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm">
+        <div
+          role="status"
+          className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm"
+        >
           Thanks! Your request was submitted.
         </div>
       ) : null}
 
       {/* Two-column: FAQs + Contact */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* FAQs */}
-        <div className="md:col-span-2 space-y-3">
+      <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-3">
+        {/* FAQs + Recent */}
+        <div className="md:col-span-2 space-y-4 sm:space-y-5">
           <Card>
-            <CardContent className="p-4 space-y-2">
-              <h2 className="text-lg font-semibold">FAQs</h2>
+            <CardContent className="p-4 sm:p-5 space-y-2">
+              <h2 className="text-base sm:text-lg font-semibold">FAQs</h2>
 
               <details className="rounded-md border px-4 py-3">
                 <summary className="cursor-pointer font-medium">How do payments work?</summary>
@@ -138,51 +146,83 @@ export default async function HelpPage({ searchParams }: { searchParams?: Search
 
           {/* Your recent tickets */}
           {me ? (
-            <Card>
-              <CardContent className="p-0">
-                <div className="p-4">
-                  <h2 className="text-lg font-semibold">Your recent requests</h2>
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[40%]">Subject / Message</TableHead>
-                      <TableHead className="w-[20%]">Type</TableHead>
-                      <TableHead className="w-[25%]">Target</TableHead>
-                      <TableHead className="w-[15%]">Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recent.length ? (
-                      recent.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="truncate">{(r.reason ?? "").split("\n")[0] || "(no subject)"}</TableCell>
-                          <TableCell className="truncate">{r.target_type}</TableCell>
-                          <TableCell className="truncate">
-                            <code className="text-xs">{r.target_id}</code>
-                          </TableCell>
-                          <TableCell>{new Date(r.created_at).toLocaleString()}</TableCell>
+            <>
+              {/* Mobile cards */}
+              <div className="grid gap-3 sm:hidden">
+                {recent.length ? recent.map((r) => {
+                  const subject = (r.reason ?? "").split("\n")[0] || "(no subject)";
+                  return (
+                    <Card key={r.id}>
+                      <CardContent className="p-4 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-medium line-clamp-2">{subject}</div>
+                          <span className="rounded border px-2 py-1 text-xs">{r.target_type}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground break-all">
+                          Target: <code>{r.target_id}</code>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(r.created_at).toLocaleString()}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                }) : (
+                  <Card><CardContent className="p-6 text-center text-muted-foreground">No requests yet.</CardContent></Card>
+                )}
+              </div>
+
+              {/* Desktop table */}
+              <Card className="hidden sm:block">
+                <CardContent className="p-0">
+                  <div className="p-4">
+                    <h2 className="text-lg font-semibold">Your recent requests</h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[40%]">Subject / Message</TableHead>
+                          <TableHead className="w-[20%]">Type</TableHead>
+                          <TableHead className="w-[25%]">Target</TableHead>
+                          <TableHead className="w-[15%]">Created</TableHead>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                          No requests yet.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {recent.length ? (
+                          recent.map((r) => (
+                            <TableRow key={r.id}>
+                              <TableCell className="truncate">
+                                {(r.reason ?? "").split("\n")[0] || "(no subject)"}
+                              </TableCell>
+                              <TableCell className="truncate">{r.target_type}</TableCell>
+                              <TableCell className="truncate">
+                                <code className="text-xs">{r.target_id}</code>
+                              </TableCell>
+                              <TableCell>{new Date(r.created_at).toLocaleString()}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                              No requests yet.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
           ) : null}
         </div>
 
         {/* Contact form */}
-        <div className="space-y-3">
+        <div className="space-y-4 sm:space-y-5">
           <Card>
-            <CardContent className="p-4 space-y-4">
-              <h2 className="text-lg font-semibold">Contact support</h2>
+            <CardContent className="p-4 sm:p-5 space-y-4">
+              <h2 className="text-base sm:text-lg font-semibold">Contact support</h2>
               {!authUser ? (
                 <div className="rounded-md border px-3 py-2 text-sm">
                   Please <Link href="/login" className="text-blue-600 hover:underline">sign in</Link> to send a request.
@@ -194,9 +234,11 @@ export default async function HelpPage({ searchParams }: { searchParams?: Search
                     <input
                       id="subject"
                       name="subject"
-                      className="mt-1 w-full rounded-md border px-3 py-2"
+                      className="mt-1 w-full rounded-md border px-3 py-3 text-base"
                       placeholder="Brief summary"
                       required
+                      inputMode="text"
+                      aria-required="true"
                     />
                   </div>
                   <div>
@@ -204,16 +246,23 @@ export default async function HelpPage({ searchParams }: { searchParams?: Search
                     <textarea
                       id="message"
                       name="message"
-                      className="mt-1 w-full rounded-md border px-3 py-2"
+                      className="mt-1 w-full rounded-md border px-3 py-3 text-base"
                       placeholder="Describe the issue or question…"
                       rows={5}
                       required
+                      aria-required="true"
                     />
                   </div>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label htmlFor="type" className="block text-sm text-muted-foreground">Type</label>
-                      <select id="type" name="type" className="mt-1 w-full rounded-md border px-3 py-2 bg-white" defaultValue="support">
+                      <select
+                        id="type"
+                        name="type"
+                        className="mt-1 w-full rounded-md border px-3 py-3 bg-white text-base"
+                        defaultValue="support"
+                        aria-label="Request type"
+                      >
                         <option value="support">General support</option>
                         <option value="project">Project issue</option>
                         <option value="user">User issue</option>
@@ -225,13 +274,17 @@ export default async function HelpPage({ searchParams }: { searchParams?: Search
                       <input
                         id="targetId"
                         name="targetId"
-                        className="mt-1 w-full rounded-md border px-3 py-2"
+                        className="mt-1 w-full rounded-md border px-3 py-3 text-base"
                         placeholder="UUID of project/user/message"
+                        inputMode="text"
                       />
                     </div>
                   </div>
-                  <div className="pt-1">
-                    <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:justify-end pt-1">
+                    <Link href="/help" className="rounded-md border px-4 py-3 text-sm text-center">
+                      Cancel
+                    </Link>
+                    <button type="submit" className="rounded-md bg-black px-4 py-3 text-sm font-medium text-white">
                       Submit request
                     </button>
                   </div>
@@ -241,9 +294,9 @@ export default async function HelpPage({ searchParams }: { searchParams?: Search
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 sm:p-5">
               <h3 className="font-semibold">Quick links</h3>
-              <ul className="mt-2 list-disc pl-5 text-sm">
+              <ul className="mt-2 list-disc pl-5 text-sm space-y-1">
                 <li><Link href="/projects" className="text-blue-600 hover:underline">Browse projects</Link></li>
                 <li><Link href="/providers" className="text-blue-600 hover:underline">Find providers</Link></li>
                 <li><Link href="/pricing" className="text-blue-600 hover:underline">Pricing & fees</Link></li>

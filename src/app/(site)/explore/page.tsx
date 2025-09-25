@@ -9,9 +9,9 @@ type Tab = "projects" | "providers" | "categories" | "skills";
 
 type SearchParams = {
   t?: Tab | string;
-  q?: string;          // generic search text
-  cat?: string;        // category slug (projects/providers)
-  wilaya?: string;     // location filter
+  q?: string;
+  cat?: string;
+  wilaya?: string;
   page?: string;
 };
 
@@ -44,21 +44,23 @@ function Tabs({
 }) {
   const tabs: Tab[] = ["projects", "providers", "categories", "skills"];
   return (
-    <div className="flex gap-2 border-b">
-      {tabs.map((t) => {
-        const active = current === t;
-        return (
-          <Link
-            key={t}
-            href={`/explore${buildQueryString(baseParams, { t })}`}
-            className={`px-3 py-2 border-b-2 ${
-              active ? "border-black font-semibold" : "border-transparent text-muted-foreground"
-            }`}
-          >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </Link>
-        );
-      })}
+    <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+      <div className="flex gap-2 border-b min-w-max">
+        {tabs.map((t) => {
+          const active = current === t;
+          return (
+            <Link
+              key={t}
+              href={`/explore${buildQueryString(baseParams, { t })}`}
+              className={`px-3 py-2 border-b-2 whitespace-nowrap ${
+                active ? "border-black font-semibold" : "border-transparent text-muted-foreground"
+              }`}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -77,10 +79,11 @@ function SearchFilters({
   return (
     <Card>
       <CardContent className="p-4">
-        <form action="/explore" method="GET" className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <form action="/explore" method="GET" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <input type="hidden" name="t" value={t} />
-          <div className="flex items-center gap-2">
-            <label htmlFor="q" className="w-20 text-sm text-muted-foreground">
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="q" className="text-sm text-muted-foreground">
               Search
             </label>
             <input
@@ -93,8 +96,8 @@ function SearchFilters({
           </div>
 
           {(t === "projects" || t === "providers") && (
-            <div className="flex items-center gap-2">
-              <label htmlFor="cat" className="w-20 text-sm text-muted-foreground">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="cat" className="text-sm text-muted-foreground">
                 Category
               </label>
               <input
@@ -108,8 +111,8 @@ function SearchFilters({
           )}
 
           {(t === "projects" || t === "providers") && (
-            <div className="flex items-center gap-2">
-              <label htmlFor="wilaya" className="w-20 text-sm text-muted-foreground">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="wilaya" className="text-sm text-muted-foreground">
                 Wilaya
               </label>
               <input
@@ -122,14 +125,14 @@ function SearchFilters({
             </div>
           )}
 
-          <div className="flex items-center gap-2 md:justify-end">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-end sm:justify-end">
             <Link
               href={`/explore${buildQueryString({ t, q, cat, wilaya, page: "1" }, { q: "", cat: "", wilaya: "" })}`}
-              className="rounded-md border px-3 py-2"
+              className="rounded-md border px-4 py-2 text-center"
             >
               Reset
             </Link>
-            <button type="submit" className="rounded-md bg-black px-3 py-2 text-white">
+            <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">
               Apply
             </button>
           </div>
@@ -149,17 +152,15 @@ function Pagination({
   baseParams: Record<string, string | undefined>;
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-sm text-muted-foreground">
         Page <span className="font-medium">{page}</span> of{" "}
         <span className="font-medium">{totalPages}</span>
       </div>
       <div className="flex gap-2">
         <Link
-          href={
-            page > 1 ? `/explore${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"
-          }
-          className={`rounded-md border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+          href={page > 1 ? `/explore${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"}
+          className={`rounded-md border px-4 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
           aria-disabled={page <= 1}
         >
           Previous
@@ -168,7 +169,7 @@ function Pagination({
           href={
             page < totalPages ? `/explore${buildQueryString(baseParams, { page: String(page + 1) })}` : "#"
           }
-          className={`rounded-md border px-3 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
+          className={`rounded-md border px-4 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
           aria-disabled={page >= totalPages}
         >
           Next
@@ -208,10 +209,9 @@ export default async function ExplorePage({
     page: String(page),
   };
 
-  // --- Tabs ---
   const tabs = <Tabs current={t} baseParams={baseParams} />;
 
-  // --- PROJECTS ---
+  /* ---------- PROJECTS ---------- */
   if (t === "projects") {
     type Row = {
       id: string;
@@ -240,7 +240,6 @@ export default async function ExplorePage({
     if (q) q1 = q1.ilike("title", `%${q}%`);
     if (wilaya) q1 = q1.ilike("city", `%${wilaya}%`);
     if (cat) {
-      // filter by category slug via join table
       const { data: catRow } = await supabase
         .from("service_categories")
         .select("id,slug")
@@ -257,8 +256,8 @@ export default async function ExplorePage({
         if (ids.length) q1 = q1.in("id", ids);
         else {
           return (
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-              <h1 className="text-3xl font-bold">Explore</h1>
+            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+              <h1 className="text-2xl sm:text-3xl font-bold">Explore</h1>
               {tabs}
               <SearchFilters t={t} q={q} cat={cat} wilaya={wilaya} />
               <div className="text-sm text-muted-foreground">No projects found.</div>
@@ -285,13 +284,52 @@ export default async function ExplorePage({
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Explore</h1>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Explore</h1>
         {tabs}
         <SearchFilters t={t} q={q} cat={cat} wilaya={wilaya} />
 
-        <Card>
-          <CardContent className="p-0">
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {rows.length ? (
+            rows.map((p) => (
+              <Card key={p.id}>
+                <CardContent className="p-4 space-y-2">
+                  <Link href={`/projects/${p.id}`} className="font-medium line-clamp-2 hover:underline">
+                    {p.title}
+                  </Link>
+                  {p.description ? (
+                    <p className="text-sm text-muted-foreground line-clamp-2">{p.description}</p>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    <span className="rounded border px-2 py-1">
+                      {p.budget_kind === "fixed"
+                        ? p.budget_amount != null
+                          ? `${p.budget_amount} DZD`
+                          : "—"
+                        : `${p.hourly_min ?? "—"}–${p.hourly_max ?? "—"} DZD/h`}
+                    </span>
+                    <span className="rounded border px-2 py-1">
+                      {[p.city, p.country].filter(Boolean).join(", ") || "Remote"}
+                    </span>
+                    <Badge variant={p.status === "open" ? undefined : "outline"}>
+                      {p.status.replace("_", " ")}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      {new Date(p.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No projects found.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -351,7 +389,7 @@ export default async function ExplorePage({
     );
   }
 
-  // --- PROVIDERS ---
+  /* ---------- PROVIDERS ---------- */
   if (t === "providers") {
     type ProviderRow = {
       user_id: string;
@@ -379,8 +417,8 @@ export default async function ExplorePage({
       if (ids.length) q2 = q2.in("user_id", ids);
       else {
         return (
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-            <h1 className="text-3xl font-bold">Explore</h1>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+            <h1 className="text-2xl sm:text-3xl font-bold">Explore</h1>
             {tabs}
             <SearchFilters t={t} q={q} cat={cat} wilaya={wilaya} />
             <div className="text-sm text-muted-foreground">No providers found.</div>
@@ -406,8 +444,8 @@ export default async function ExplorePage({
         if (ids.length) q2 = q2.in("user_id", ids);
         else {
           return (
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-              <h1 className="text-3xl font-bold">Explore</h1>
+            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+              <h1 className="text-2xl sm:text-3xl font-bold">Explore</h1>
               {tabs}
               <SearchFilters t={t} q={q} cat={cat} wilaya={wilaya} />
               <div className="text-sm text-muted-foreground">No providers found.</div>
@@ -434,13 +472,43 @@ export default async function ExplorePage({
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Explore</h1>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Explore</h1>
         {tabs}
         <SearchFilters t={t} q={q} cat={cat} wilaya={wilaya} />
 
-        <Card>
-          <CardContent className="p-0">
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {rows.length ? rows.map((pr) => (
+            <Card key={pr.user_id}>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium line-clamp-2">{pr.display_name ?? "Unnamed provider"}</div>
+                  {pr.verified ? <Badge>Verified</Badge> : <Badge variant="outline">Unverified</Badge>}
+                </div>
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <span className="rounded border px-2 py-1">Rate: {pr.hourly_rate ?? "—"} DZD/h</span>
+                  <span className="rounded border px-2 py-1">Exp: {pr.years_experience ?? "—"} yrs</span>
+                  <span className="text-muted-foreground">{new Date(pr.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <Link href={`/providers/${pr.user_id}`} className="text-blue-600 hover:underline" prefetch={false}>
+                    View
+                  </Link>
+                  <Link href={`/projects/new?invite=${pr.user_id}`} className="text-blue-600 hover:underline" prefetch={false}>
+                    Invite
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No providers found.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -492,7 +560,7 @@ export default async function ExplorePage({
     );
   }
 
-  // --- CATEGORIES ---
+  /* ---------- CATEGORIES ---------- */
   if (t === "categories") {
     type Category = { id: string; slug: string; name: string; parent_id: string | null };
 
@@ -521,21 +589,22 @@ export default async function ExplorePage({
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Explore</h1>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Explore</h1>
         {tabs}
         <SearchFilters t={t} q={q} cat={cat} wilaya={wilaya} />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           {rows.length ? (
             rows.map((c) => (
               <Link key={c.id} href={`/categories/${c.slug}`}>
                 <Card>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{c.name}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium line-clamp-2">{c.name}</span>
                       <Badge variant="outline">{c.parent_id ? "Sub" : "Top"}</Badge>
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">{c.slug}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -552,7 +621,7 @@ export default async function ExplorePage({
     );
   }
 
-  // --- SKILLS ---
+  /* ---------- SKILLS ---------- */
   {
     type Skill = { id: string; slug: string; name: string };
 
@@ -581,12 +650,28 @@ export default async function ExplorePage({
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Explore</h1>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Explore</h1>
         {tabs}
         <SearchFilters t={"skills"} q={q} cat={cat} wilaya={wilaya} />
-        <Card>
-          <CardContent className="p-0">
+
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {rows.length ? rows.map((s) => (
+            <Card key={s.id}>
+              <CardContent className="p-4">
+                <div className="font-medium">{s.name}</div>
+                <div className="text-xs text-muted-foreground">{s.slug}</div>
+              </CardContent>
+            </Card>
+          )) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No skills found.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

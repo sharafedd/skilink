@@ -153,7 +153,6 @@ async function setProviderMode(formData: FormData) {
       .limit(1)
       .maybeSingle();
     if (!profile) {
-      // Try to take display_name from user_profiles
       const { data: up } = await supabase.from("user_profiles").select("display_name").eq("user_id", userId).limit(1).maybeSingle();
       await supabase.from("provider_profiles").insert({
         user_id: userId,
@@ -236,17 +235,9 @@ async function addService(formData: FormData) {
   const catId = (cat as { id: string } | null)?.id;
   if (!catId) return;
 
-  // INSERT and ignore duplicate key errors (composite PK user_id+category_id)
-  const { error } = await supabase
-    .from("provider_services")
-    .insert({ user_id: userId, category_id: catId });
-
-  // If you want to silently ignore duplicates, check Postgres code 23505:
-  // if (error && error.code !== "23505") throw error;
-
+  await supabase.from("provider_services").insert({ user_id: userId, category_id: catId });
   revalidatePath("/profile");
 }
-
 
 async function removeService(formData: FormData) {
   "use server";
@@ -279,7 +270,6 @@ async function addSkill(formData: FormData) {
   const slug = String(formData.get("skill_slug") || "").trim();
   const levelRaw = Number(String(formData.get("skill_level") || "").trim());
   const level = Number.isFinite(levelRaw) ? Math.max(1, Math.min(5, levelRaw)) : 3;
-
   if (!slug) return;
 
   const { data: urow } = await supabase
@@ -295,9 +285,7 @@ async function addSkill(formData: FormData) {
   const skillId = (sk as { id: string } | null)?.id;
   if (!skillId) return;
 
-  await supabase
-    .from("provider_skills")
-    .upsert({ user_id: userId, skill_id: skillId, level });
+  await supabase.from("provider_skills").upsert({ user_id: userId, skill_id: skillId, level });
   revalidatePath("/profile");
 }
 
@@ -330,11 +318,15 @@ export default async function ProfilePage() {
 
   if (!authUser) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Profile</h1>
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+        <h1 className="text-2xl sm:text-3xl font-bold">Profile</h1>
         <Card>
           <CardContent className="p-6 text-sm">
-            Please <Link href="/auth/sign-in" className="text-blue-600 hover:underline">sign in</Link> to manage your profile.
+            Please{" "}
+            <Link href="/auth/sign-in" className="text-blue-600 hover:underline">
+              sign in
+            </Link>{" "}
+            to manage your profile.
           </CardContent>
         </Card>
       </div>
@@ -344,7 +336,6 @@ export default async function ProfilePage() {
   // Resolve app user
   let me: AppUser | null = null;
 
-  // 1) Try by auth_id
   const { data: byAuth } = await supabase
     .from("users")
     .select("id,auth_id,email,is_provider,role")
@@ -355,7 +346,6 @@ export default async function ProfilePage() {
   if (byAuth) {
     me = byAuth as AppUser;
   } else if (authUser.email) {
-    // 2) Try by email and attach auth_id
     const { data: byEmail } = await supabase
       .from("users")
       .select("id,auth_id,email,is_provider,role")
@@ -371,7 +361,6 @@ export default async function ProfilePage() {
 
       me = { ...(byEmail as AppUser), auth_id: authUser.id };
     } else {
-      // 3) Create a new app user row
       const { data: created } = await supabase
         .from("users")
         .insert({
@@ -388,9 +377,11 @@ export default async function ProfilePage() {
   }
   if (!me) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <Card><CardContent className="p-6 text-sm">We couldn’t find your account record.</CardContent></Card>
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+        <h1 className="text-2xl sm:text-3xl font-bold">Profile</h1>
+        <Card>
+          <CardContent className="p-6 text-sm">We couldn’t find your account record.</CardContent>
+        </Card>
       </div>
     );
   }
@@ -450,26 +441,29 @@ export default async function ProfilePage() {
   const langString = (profile.languages ?? []).join(", ");
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <div className="text-sm text-muted-foreground">Signed in as {me.email ?? authUser.email ?? "user"}</div>
+    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold">Profile</h1>
+        <div className="text-xs sm:text-sm text-muted-foreground">
+          Signed in as {me.email ?? authUser.email ?? "user"}
+        </div>
       </div>
 
       {/* Basic profile */}
       <Card>
-        <CardContent className="p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Basic information</h2>
-          <form action={saveProfile} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div className="md:col-span-1">
+        <CardContent className="p-5 sm:p-6 space-y-4">
+          <h2 className="text-base sm:text-lg font-semibold">Basic information</h2>
+          <form action={saveProfile} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
               <label className="block text-sm text-muted-foreground">Display name</label>
               <input name="display_name" defaultValue={profile.display_name ?? ""} className="mt-1 w-full rounded-md border px-3 py-2" />
             </div>
-            <div className="md:col-span-1">
+            <div>
               <label className="block text-sm text-muted-foreground">Headline</label>
               <input name="headline" defaultValue={profile.headline ?? ""} className="mt-1 w-full rounded-md border px-3 py-2" />
             </div>
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm text-muted-foreground">Bio</label>
               <textarea name="bio" defaultValue={profile.bio ?? ""} rows={4} className="mt-1 w-full rounded-md border px-3 py-2" />
             </div>
@@ -489,12 +483,12 @@ export default async function ProfilePage() {
               <label className="block text-sm text-muted-foreground">Website</label>
               <input name="website" defaultValue={profile.website ?? ""} placeholder="https://…" className="mt-1 w-full rounded-md border px-3 py-2" />
             </div>
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm text-muted-foreground">Languages (comma-separated)</label>
               <input name="languages" defaultValue={langString} placeholder="ar, fr" className="mt-1 w-full rounded-md border px-3 py-2" />
             </div>
-            <div className="md:col-span-2 flex items-center justify-end">
-              <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">Save profile</button>
+            <div className="sm:col-span-2 flex flex-col sm:flex-row sm:justify-end">
+              <button type="submit" className="rounded-md bg-black px-4 py-2 text-white w-full sm:w-auto">Save profile</button>
             </div>
           </form>
         </CardContent>
@@ -502,9 +496,9 @@ export default async function ProfilePage() {
 
       {/* Settings */}
       <Card>
-        <CardContent className="p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Settings</h2>
-          <form action={saveSettings} className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <CardContent className="p-5 sm:p-6 space-y-4">
+          <h2 className="text-base sm:text-lg font-semibold">Settings</h2>
+          <form action={saveSettings} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="flex items-center gap-2">
               <input id="email_notifications" name="email_notifications" type="checkbox" defaultChecked={settings.email_notifications} />
               <label htmlFor="email_notifications" className="text-sm">Email notifications</label>
@@ -517,8 +511,8 @@ export default async function ProfilePage() {
               <label className="block text-sm text-muted-foreground">Currency</label>
               <input name="currency" defaultValue={settings.currency ?? "DZD"} className="mt-1 w-full rounded-md border px-3 py-2" />
             </div>
-            <div className="md:col-span-3 flex items-center justify-end">
-              <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">Save settings</button>
+            <div className="sm:col-span-3 flex flex-col sm:flex-row sm:justify-end">
+              <button type="submit" className="rounded-md bg-black px-4 py-2 text-white w-full sm:w-auto">Save settings</button>
             </div>
           </form>
         </CardContent>
@@ -526,12 +520,12 @@ export default async function ProfilePage() {
 
       {/* Provider mode */}
       <Card>
-        <CardContent className="p-6 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Provider mode</h2>
-            <form action={setProviderMode}>
+        <CardContent className="p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-base sm:text-lg font-semibold">Provider mode</h2>
+            <form action={setProviderMode} className="self-start sm:self-auto">
               <input type="hidden" name="value" value={me.is_provider ? "off" : "on"} />
-              <button className="rounded-md border px-3 py-2 text-sm">
+              <button className="rounded-md border px-3 py-2 text-sm w-full sm:w-auto">
                 {me.is_provider ? "Disable" : "Enable"} provider mode
               </button>
             </form>
@@ -542,8 +536,8 @@ export default async function ProfilePage() {
               {/* Provider basics */}
               <div className="space-y-3">
                 <h3 className="font-medium">Basics</h3>
-                <form action={saveProviderBasics} className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <div className="md:col-span-3">
+                <form action={saveProviderBasics} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="sm:col-span-3">
                     <label className="block text-sm text-muted-foreground">Business / display name</label>
                     <input name="p_display_name" defaultValue={provider?.display_name ?? profile.display_name ?? ""} className="mt-1 w-full rounded-md border px-3 py-2" />
                   </div>
@@ -567,8 +561,8 @@ export default async function ProfilePage() {
                     <input id="remote" name="remote" type="checkbox" defaultChecked={provider?.remote ?? true} />
                     <label htmlFor="remote" className="text-sm">Remote</label>
                   </div>
-                  <div className="md:col-span-3 flex items-center justify-end">
-                    <button className="rounded-md bg-black px-4 py-2 text-white">Save provider</button>
+                  <div className="sm:col-span-3 flex flex-col sm:flex-row sm:justify-end">
+                    <button className="rounded-md bg-black px-4 py-2 text-white w-full sm:w-auto">Save provider</button>
                   </div>
                 </form>
               </div>
@@ -579,19 +573,29 @@ export default async function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                   {services.length ? (
                     services.map((s) => (
-                      <form key={s.category_id} action={removeService} className="inline-flex items-center gap-2 rounded-md border px-2 py-1">
+                      <form
+                        key={s.category_id}
+                        action={removeService}
+                        className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm"
+                      >
                         <input type="hidden" name="category_id" value={s.category_id} />
-                        <span className="text-sm">{s.category?.name ?? s.category_id}</span>
-                        <button className="text-xs opacity-60 hover:opacity-100" aria-label="Remove">Remove</button>
+                        <span>{s.category?.name ?? s.category_id}</span>
+                        <button className="text-xs opacity-70 hover:opacity-100" aria-label="Remove">
+                          Remove
+                        </button>
                       </form>
                     ))
                   ) : (
                     <span className="text-sm text-muted-foreground">No services yet.</span>
                   )}
                 </div>
-                <form action={addService} className="flex items-center gap-2">
-                  <input name="cat_slug" placeholder="category slug (e.g., plumbing)" className="w-64 rounded-md border px-3 py-2" />
-                  <button className="rounded-md border px-3 py-2 text-sm">Add service</button>
+                <form action={addService} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <input
+                    name="cat_slug"
+                    placeholder="category slug (e.g., plumbing)"
+                    className="rounded-md border px-3 py-2 w-full"
+                  />
+                  <button className="rounded-md border px-3 py-2 text-sm w-full sm:w-auto">Add service</button>
                 </form>
               </div>
 
@@ -601,20 +605,42 @@ export default async function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                   {skills.length ? (
                     skills.map((sk) => (
-                      <form key={sk.skill_id} action={removeSkill} className="inline-flex items-center gap-2 rounded-md border px-2 py-1">
+                      <form
+                        key={sk.skill_id}
+                        action={removeSkill}
+                        className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm"
+                      >
                         <input type="hidden" name="skill_id" value={sk.skill_id} />
-                        <span className="text-sm">{sk.skill?.name ?? sk.skill_id}{sk.level ? ` · L${sk.level}` : ""}</span>
-                        <button className="text-xs opacity-60 hover:opacity-100" aria-label="Remove">Remove</button>
+                        <span>
+                          {sk.skill?.name ?? sk.skill_id}
+                          {sk.level ? ` · L${sk.level}` : ""}
+                        </span>
+                        <button className="text-xs opacity-70 hover:opacity-100" aria-label="Remove">
+                          Remove
+                        </button>
                       </form>
                     ))
                   ) : (
                     <span className="text-sm text-muted-foreground">No skills yet.</span>
                   )}
                 </div>
-                <form action={addSkill} className="flex items-center gap-2">
-                  <input name="skill_slug" placeholder="skill slug (e.g., react)" className="w-64 rounded-md border px-3 py-2" />
-                  <input name="skill_level" placeholder="level 1–5" className="w-28 rounded-md border px-3 py-2" />
-                  <button className="rounded-md border px-3 py-2 text-sm">Add / update skill</button>
+                <form
+                  action={addSkill}
+                  className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_10rem_auto] sm:items-center"
+                >
+                  <input
+                    name="skill_slug"
+                    placeholder="skill slug (e.g., react)"
+                    className="rounded-md border px-3 py-2 w-full"
+                  />
+                  <input
+                    name="skill_level"
+                    placeholder="level 1–5"
+                    className="rounded-md border px-3 py-2 w-full sm:w-auto"
+                  />
+                  <button className="rounded-md border px-3 py-2 text-sm w-full sm:w-auto">
+                    Add / update skill
+                  </button>
                 </form>
               </div>
             </div>

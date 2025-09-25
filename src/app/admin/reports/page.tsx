@@ -52,10 +52,18 @@ function TargetBadge({ type }: { type: ReportRow["target_type"] }) {
   return <Badge variant={variant}>{label}</Badge>;
 }
 
+// Fixed-locale to avoid hydration mismatches
+const dtf = new Intl.DateTimeFormat("en-GB", {
+  year: "numeric",
+  month: "short",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 function formatDateTime(iso: string) {
   try {
-    return new Date(iso).toLocaleString();
+    return dtf.format(new Date(iso));
   } catch {
     return iso;
   }
@@ -63,19 +71,7 @@ function formatDateTime(iso: string) {
 
 /* ---------- Filters (plain GET) ---------- */
 
-function Filters({
-  q,
-  type,
-  from,
-  to,
-  currentPage,
-}: {
-  q: string;
-  type: SearchParams["type"];
-  from: string;
-  to: string;
-  currentPage: number;
-}) {
+function Filters({ q, type, from, to, currentPage }: { q: string; type: SearchParams["type"]; from: string; to: string; currentPage: number; }) {
   const baseParams: Record<string, string | undefined> = {
     q: q || undefined,
     type: type || undefined,
@@ -87,25 +83,14 @@ function Filters({
     <Card>
       <CardContent className="p-4">
         <form action="/admin/reports" method="GET" className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <div className="flex items-center gap-2">
-            <label htmlFor="q" className="text-sm text-muted-foreground w-20">Search</label>
-            <input
-              id="q"
-              name="q"
-              defaultValue={q}
-              placeholder="Reason…"
-              className="w-full rounded-md border px-3 py-2"
-            />
+          <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+            <label htmlFor="q" className="text-xs md:text-sm text-muted-foreground md:w-20">Search</label>
+            <input id="q" name="q" defaultValue={q} placeholder="Reason…" className="w-full rounded-md border px-3 py-2 text-sm md:text-base" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="type" className="text-sm text-muted-foreground w-20">Type</label>
-            <select
-              id="type"
-              name="type"
-              defaultValue={type || ""}
-              className="w-full rounded-md border px-3 py-2 bg-white"
-            >
+          <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+            <label htmlFor="type" className="text-xs md:text-sm text-muted-foreground md:w-20">Type</label>
+            <select id="type" name="type" defaultValue={type || ""} className="w-full rounded-md border px-3 py-2 bg-white text-sm md:text-base">
               <option value="">All</option>
               <option value="user">User</option>
               <option value="project">Project</option>
@@ -113,38 +98,19 @@ function Filters({
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="from" className="text-sm text-muted-foreground w-20">From</label>
-            <input
-              id="from"
-              name="from"
-              type="date"
-              defaultValue={from}
-              className="w-full rounded-md border px-3 py-2"
-            />
+          <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+            <label htmlFor="from" className="text-xs md:text-sm text-muted-foreground md:w-20">From</label>
+            <input id="from" name="from" type="date" defaultValue={from} className="w-full rounded-md border px-3 py-2 text-sm md:text-base" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="to" className="text-sm text-muted-foreground w-20">To</label>
-            <input
-              id="to"
-              name="to"
-              type="date"
-              defaultValue={to}
-              className="w-full rounded-md border px-3 py-2"
-            />
+          <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+            <label htmlFor="to" className="text-xs md:text-sm text-muted-foreground md:w-20">To</label>
+            <input id="to" name="to" type="date" defaultValue={to} className="w-full rounded-md border px-3 py-2 text-sm md:text-base" />
           </div>
 
           <div className="md:col-span-4 flex items-center gap-2 md:justify-end">
-            <Link
-              href={`/admin/reports${buildQueryString(baseParams, { q: "", type: "", from: "", to: "", page: "1" })}`}
-              className="rounded-md border px-3 py-2"
-            >
-              Reset
-            </Link>
-            <button type="submit" className="rounded-md bg-black text-white px-3 py-2">
-              Apply
-            </button>
+            <Link href={`/admin/reports${buildQueryString(baseParams, { q: "", type: "", from: "", to: "", page: "1" })}`} className="rounded-md border px-3 py-2 text-sm md:text-base">Reset</Link>
+            <button type="submit" className="rounded-md bg-black text-white px-3 py-2 text-sm md:text-base">Apply</button>
           </div>
         </form>
       </CardContent>
@@ -154,42 +120,17 @@ function Filters({
 
 /* ---------- Pagination ---------- */
 
-function Pagination({
-  page,
-  totalPages,
-  baseParams,
-}: {
-  page: number;
-  totalPages: number;
-  baseParams: Record<string, string | undefined>;
-}) {
+function Pagination({ page, totalPages, baseParams }: { page: number; totalPages: number; baseParams: Record<string, string | undefined>; }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="text-sm text-muted-foreground">
-        Page <span className="font-medium">{page}</span> of{" "}
-        <span className="font-medium">{totalPages}</span>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-xs sm:text-sm text-muted-foreground">
+        Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
       </div>
       <div className="flex gap-2">
-        <Link
-          href={
-            page > 1
-              ? `/admin/reports${buildQueryString(baseParams, { page: String(page - 1) })}`
-              : "#"
-          }
-          aria-disabled={page <= 1}
-          className={`rounded-md border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
-        >
+        <Link href={page > 1 ? `/admin/reports${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"} aria-disabled={page <= 1} className={`rounded-md border px-3 py-2 text-sm ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}>
           Previous
         </Link>
-        <Link
-          href={
-            page < totalPages
-              ? `/admin/reports${buildQueryString(baseParams, { page: String(page + 1) })}`
-              : "#"
-          }
-          aria-disabled={page >= totalPages}
-          className={`rounded-md border px-3 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
-        >
+        <Link href={page < totalPages ? `/admin/reports${buildQueryString(baseParams, { page: String(page + 1) })}` : "#"} aria-disabled={page >= totalPages} className={`rounded-md border px-3 py-2 text-sm ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}>
           Next
         </Link>
       </div>
@@ -199,11 +140,7 @@ function Pagination({
 
 /* ---------- Page ---------- */
 
-export default async function AdminReportsPage({
-  searchParams,
-}: {
-  searchParams?: SearchParams;
-}) {
+export default async function AdminReportsPage({ searchParams }: { searchParams?: SearchParams; }) {
   const supabase = await createSupabaseServerRO();
 
   const q = (searchParams?.q ?? "").trim();
@@ -231,11 +168,9 @@ export default async function AdminReportsPage({
 
   if (error) {
     return (
-      <div className="p-6">
-        <h1 className="text-3xl font-bold mb-4">Reports</h1>
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          Failed to load reports: {error.message}
-        </div>
+      <div className="p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4">Reports</h1>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">Failed to load reports: {error.message}</div>
       </div>
     );
   }
@@ -243,8 +178,8 @@ export default async function AdminReportsPage({
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  // Fetch reporter emails
-  const reporterIds = (reports as ReportRow[] | null)?.map((r) => r.reporter_id) ?? [];
+  // Fetch reporter emails (dedup IDs)
+  const reporterIds = Array.from(new Set(((reports as ReportRow[] | null)?.map((r) => r.reporter_id) ?? [])));
   const reportersMap = new Map<string, UserRow>();
   if (reporterIds.length) {
     const { data: users } = await supabase.from("users").select("id,email").in("id", reporterIds);
@@ -260,14 +195,13 @@ export default async function AdminReportsPage({
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-3xl font-bold">Reports</h1>
+    <div className="space-y-6 p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold">Reports</h1>
 
       <Filters q={q} type={type} from={from} to={to} currentPage={page} />
 
-      <div className="text-sm text-muted-foreground">
-        Showing <span className="font-medium">{reports?.length ?? 0}</span> of{" "}
-        <span className="font-medium">{total}</span> reports
+      <div className="text-xs sm:text-sm text-muted-foreground">
+        Showing <span className="font-medium">{reports?.length ?? 0}</span> of <span className="font-medium">{total}</span> reports
         {q ? <> for <span className="font-medium">&ldquo;{q}&rdquo;</span></> : null}
         {type ? <> · type: <span className="font-medium">{type}</span></> : null}
         {from ? <> · from <span className="font-medium">{from}</span></> : null}
@@ -276,55 +210,91 @@ export default async function AdminReportsPage({
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[20%]">Reporter</TableHead>
-                <TableHead className="w-[12%]">Type</TableHead>
-                <TableHead className="w-[28%]">Target</TableHead>
-                <TableHead className="w-[25%]">Reason</TableHead>
-                <TableHead className="w-[15%]">Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reports && reports.length > 0 ? (
-                (reports as ReportRow[]).map((r) => {
-                  const reporter = reportersMap.get(r.reporter_id);
-                  const reporterEmail = reporter?.email ?? r.reporter_id;
+          {/* Mobile list */}
+          <div className="sm:hidden divide-y">
+            {reports && reports.length > 0 ? (
+              (reports as ReportRow[]).map((r) => {
+                const reporter = reportersMap.get(r.reporter_id);
+                const reporterEmail = reporter?.email ?? r.reporter_id;
+                let targetHref = "#";
+                if (r.target_type === "user") targetHref = `/admin/users/${r.target_id}`;
+                else if (r.target_type === "project") targetHref = `/admin/projects/${r.target_id}`;
+                else if (r.target_type === "message") targetHref = `/admin/messages/${r.target_id}`;
+                return (
+                  <div key={r.id} className="p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">
+                          <Link href={`/admin/users/${r.reporter_id}`} className="text-blue-600 hover:underline" prefetch={false}>
+                            {reporterEmail}
+                          </Link>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">Type: <TargetBadge type={r.target_type as ReportRow["target_type"]} /></span>
+                          <span className="inline-flex items-center gap-1">Target: <Link href={targetHref} className="text-blue-600 hover:underline" prefetch={false}>{r.target_id}</Link></span>
+                          <span>Created: {formatDateTime(r.created_at)}</span>
+                        </div>
+                        {r.reason ? (
+                          <div className="mt-2 text-sm">{r.reason}</div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-10 text-center text-sm text-muted-foreground">No reports found.</div>
+            )}
+          </div>
 
-                  // Build target link based on type
-                  let targetHref = "#";
-                  if (r.target_type === "user") targetHref = `/admin/users/${r.target_id}`;
-                  else if (r.target_type === "project") targetHref = `/admin/projects/${r.target_id}`;
-                  else if (r.target_type === "message") targetHref = `/admin/messages/${r.target_id}`;
-
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell className="truncate">
-                        <Link href={`/admin/users/${r.reporter_id}`} className="text-blue-600 hover:underline" prefetch={false}>
-                          {reporterEmail}
-                        </Link>
-                      </TableCell>
-                      <TableCell><TargetBadge type={r.target_type as ReportRow["target_type"]} /></TableCell>
-                      <TableCell className="truncate">
-                        <Link href={targetHref} className="text-blue-600 hover:underline" prefetch={false}>
-                          {r.target_id}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="truncate">{r.reason ?? "—"}</TableCell>
-                      <TableCell>{formatDateTime(r.created_at)}</TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table className="min-w-[880px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                    No reports found.
-                  </TableCell>
+                  <TableHead className="w-[20%]">Reporter</TableHead>
+                  <TableHead className="w-[12%]">Type</TableHead>
+                  <TableHead className="w-[28%]">Target</TableHead>
+                  <TableHead className="w-[25%]">Reason</TableHead>
+                  <TableHead className="w-[15%]">Created</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {reports && reports.length > 0 ? (
+                  (reports as ReportRow[]).map((r) => {
+                    const reporter = reportersMap.get(r.reporter_id);
+                    const reporterEmail = reporter?.email ?? r.reporter_id;
+                    let targetHref = "#";
+                    if (r.target_type === "user") targetHref = `/admin/users/${r.target_id}`;
+                    else if (r.target_type === "project") targetHref = `/admin/projects/${r.target_id}`;
+                    else if (r.target_type === "message") targetHref = `/admin/messages/${r.target_id}`;
+
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="truncate">
+                          <Link href={`/admin/users/${r.reporter_id}`} className="text-blue-600 hover:underline" prefetch={false}>
+                            {reporterEmail}
+                          </Link>
+                        </TableCell>
+                        <TableCell><TargetBadge type={r.target_type as ReportRow["target_type"]} /></TableCell>
+                        <TableCell className="truncate">
+                          <Link href={targetHref} className="text-blue-600 hover:underline" prefetch={false}>
+                            {r.target_id}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="truncate">{r.reason ?? "—"}</TableCell>
+                        <TableCell>{formatDateTime(r.created_at)}</TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No reports found.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

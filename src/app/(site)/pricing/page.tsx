@@ -15,9 +15,9 @@ type Plan = {
   id: "free" | "pro" | "business";
   name: string;
   tagline: string;
-  monthly: number; // price per month in DZD
-  yearly: number;  // price per year in DZD (discounted)
-  feePct: number;  // marketplace fee percentage on transactions
+  monthly: number;
+  yearly: number;
+  feePct: number;
   features: string[];
   ctaHref: string;
   highlight?: boolean;
@@ -76,17 +76,10 @@ const PLANS: Plan[] = [
 
 function money(amount: number) {
   if (amount === 0) return "Free";
-  // Keep it simple/local without Intl for consistency
   return `${amount.toLocaleString()} ${CURRENCY}`;
 }
 
-function PlanCard({
-  plan,
-  billing,
-}: {
-  plan: Plan;
-  billing: "monthly" | "yearly";
-}) {
+function PlanCard({ plan, billing }: { plan: Plan; billing: "monthly" | "yearly" }) {
   const price = billing === "yearly" ? plan.yearly : plan.monthly;
   const subLabel =
     billing === "yearly"
@@ -99,17 +92,17 @@ function PlanCard({
 
   return (
     <Card className={plan.highlight ? "ring-2 ring-black" : ""}>
-      <CardContent className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-semibold">{plan.name}</h3>
+      <CardContent className="p-5 sm:p-6 space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg sm:text-xl font-semibold">{plan.name}</h3>
             <p className="text-sm text-muted-foreground">{plan.tagline}</p>
           </div>
           {plan.highlight ? <Badge>Most popular</Badge> : null}
         </div>
 
         <div>
-          <div className="text-3xl font-bold">{money(price)}</div>
+          <div className="text-2xl sm:text-3xl font-bold">{money(price)}</div>
           <div className="text-xs text-muted-foreground">{subLabel}</div>
         </div>
 
@@ -122,7 +115,7 @@ function PlanCard({
           {plan.features.map((f) => (
             <li key={f} className="flex items-start gap-2">
               <span className="mt-1 h-1.5 w-1.5 rounded-full bg-black inline-block" />
-              <span>{f}</span>
+              <span className="line-clamp-2">{f}</span>
             </li>
           ))}
         </ul>
@@ -130,11 +123,10 @@ function PlanCard({
         <div className="pt-2">
           <Link
             href={plan.ctaHref}
-            className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-sm ${
-              plan.highlight
-                ? "bg-black text-white"
-                : "border"
+            className={`inline-flex w-full sm:w-auto items-center justify-center rounded-md px-4 py-2.5 text-sm ${
+              plan.highlight ? "bg-black text-white" : "border"
             }`}
+            aria-label={plan.id === "business" ? "Talk to sales" : `Choose ${plan.name}`}
           >
             {plan.id === "business" ? "Talk to sales" : "Choose plan"}
           </Link>
@@ -144,18 +136,12 @@ function PlanCard({
   );
 }
 
-export default async function PricingPage({
-  searchParams,
-}: {
-  searchParams?: SearchParams;
-}) {
+export default async function PricingPage({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = await createSupabaseServerRO();
 
-  // Decide billing period from URL (?billing=monthly|yearly), default monthly
-  const billing: "monthly" | "yearly" =
-    (searchParams?.billing === "yearly" ? "yearly" : "monthly");
+  const billing: "monthly" | "yearly" = searchParams?.billing === "yearly" ? "yearly" : "monthly";
 
-  // Pull some live stats to make the page feel “real”
+  // Live stats
   const [provRes, projRes, catRes] = await Promise.all([
     supabase.from("provider_profiles").select("user_id", { count: "exact", head: true }),
     supabase.from("projects").select("id", { count: "exact", head: true }).eq("status", "open"),
@@ -165,43 +151,42 @@ export default async function PricingPage({
   const openProjectsCount = projRes.count ?? 0;
   const categoriesCount = catRes.count ?? 0;
 
-  const baseParams: Record<string, string | undefined> = {
-    billing,
-  };
-
+  const baseParams: Record<string, string | undefined> = { billing };
   const qs = (b: "monthly" | "yearly") => {
     const p = new URLSearchParams({ ...baseParams, billing: b });
     return `/pricing?${p.toString()}`;
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 sm:space-y-10">
       {/* Hero */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold">Simple pricing for Skilink</h1>
+            <h1 className="text-2xl md:text-4xl font-bold">Simple pricing for Skilink</h1>
             <p className="mt-2 text-muted-foreground">
               Transparent plans in {CURRENCY}. Upgrade anytime.
             </p>
           </div>
-          <div className="inline-flex rounded-md border p-1">
-            <Link
-              href={qs("monthly")}
-              className={`px-3 py-1.5 text-sm rounded-md ${
-                billing === "monthly" ? "bg-black text-white" : ""
-              }`}
-            >
-              Monthly
-            </Link>
-            <Link
-              href={qs("yearly")}
-              className={`px-3 py-1.5 text-sm rounded-md ${
-                billing === "yearly" ? "bg-black text-white" : ""
-              }`}
-            >
-              Yearly
-            </Link>
+          <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+            <div className="inline-flex rounded-md border p-1 min-w-max">
+              <Link
+                href={qs("monthly")}
+                className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${
+                  billing === "monthly" ? "bg-black text-white" : ""
+                }`}
+              >
+                Monthly
+              </Link>
+              <Link
+                href={qs("yearly")}
+                className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap ${
+                  billing === "yearly" ? "bg-black text-white" : ""
+                }`}
+              >
+                Yearly
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -209,19 +194,19 @@ export default async function PricingPage({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-semibold">{providersCount.toLocaleString()}</div>
+              <div className="text-xl sm:text-2xl font-semibold">{providersCount.toLocaleString()}</div>
               <div className="text-sm text-muted-foreground">providers</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-semibold">{openProjectsCount.toLocaleString()}</div>
+              <div className="text-xl sm:text-2xl font-semibold">{openProjectsCount.toLocaleString()}</div>
               <div className="text-sm text-muted-foreground">open projects</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-semibold">{categoriesCount.toLocaleString()}</div>
+              <div className="text-xl sm:text-2xl font-semibold">{categoriesCount.toLocaleString()}</div>
               <div className="text-sm text-muted-foreground">service categories</div>
             </CardContent>
           </Card>
@@ -242,8 +227,33 @@ export default async function PricingPage({
 
       {/* Comparison */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Compare features</h2>
-        <Card>
+        <h2 className="text-lg sm:text-xl font-semibold">Compare features</h2>
+
+        {/* Mobile comparison cards */}
+        <div className="grid gap-3 sm:hidden">
+          {[
+            { label: "Marketplace fee", values: { free: "12%", pro: "8%", business: "5%" } },
+            { label: "Active proposals", values: { free: "3", pro: "Unlimited", business: "Unlimited" } },
+            { label: "Search ranking boost", values: { free: "—", pro: "✓", business: "✓" } },
+            { label: "Verified badge eligibility", values: { free: "—", pro: "✓", business: "✓" } },
+            { label: "Team seats", values: { free: "—", pro: "—", business: "✓" } },
+            { label: "Support", values: { free: "Standard", pro: "Priority", business: "Account manager" } },
+          ].map((row) => (
+            <Card key={row.label}>
+              <CardContent className="p-4 space-y-2">
+                <div className="font-medium">{row.label}</div>
+                <div className="text-sm grid grid-cols-3 gap-2">
+                  <div><span className="text-xs text-muted-foreground block">Free</span>{row.values.free}</div>
+                  <div><span className="text-xs text-muted-foreground block">Pro</span>{row.values.pro}</div>
+                  <div><span className="text-xs text-muted-foreground block">Business</span>{row.values.business}</div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
           <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
@@ -297,31 +307,37 @@ export default async function PricingPage({
         </Card>
       </section>
 
-      {/* FAQ (no extra UI deps) */}
+      {/* FAQ */}
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">FAQ</h2>
+        <h2 className="text-lg sm:text-xl font-semibold">FAQ</h2>
         <details className="rounded-md border px-4 py-3">
           <summary className="cursor-pointer font-medium">Can I switch plans later?</summary>
-          <p className="mt-2 text-sm text-muted-foreground">Yes, you can upgrade or downgrade anytime. Changes apply to the next billing cycle.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Yes, you can upgrade or downgrade anytime. Changes apply to the next billing cycle.
+          </p>
         </details>
         <details className="rounded-md border px-4 py-3">
           <summary className="cursor-pointer font-medium">How are fees charged?</summary>
-          <p className="mt-2 text-sm text-muted-foreground">The marketplace fee is taken from each successful payment. Subscription fees are billed separately.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The marketplace fee is taken from each successful payment. Subscription fees are billed separately.
+          </p>
         </details>
         <details className="rounded-md border px-4 py-3">
           <summary className="cursor-pointer font-medium">What currency do you support?</summary>
-          <p className="mt-2 text-sm text-muted-foreground">All prices are shown and billed in {CURRENCY}. Multi-currency support is planned.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            All prices are shown and billed in {CURRENCY}. Multi-currency support is planned.
+          </p>
         </details>
       </section>
 
       {/* CTA */}
-      <section className="flex flex-wrap gap-3 items-center justify-between">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-muted-foreground">
           Not sure which plan fits? Start with <span className="font-medium">Free</span> — upgrade when you’re ready.
         </div>
-        <div className="flex gap-2">
-          <Link href="/signup" className="rounded-md border px-4 py-2">Start free</Link>
-          <Link href="/billing/subscribe?plan=pro" className="rounded-md bg-black px-4 py-2 text-white">Go Pro</Link>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link href="/signup" className="rounded-md border px-4 py-2 text-center">Start free</Link>
+          <Link href="/billing/subscribe?plan=pro" className="rounded-md bg-black px-4 py-2 text-white text-center">Go Pro</Link>
         </div>
       </section>
     </div>

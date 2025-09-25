@@ -85,7 +85,7 @@ function Pagination({
   hrefBase: string;
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-sm text-muted-foreground">
         Page <span className="font-medium">{page}</span> of{" "}
         <span className="font-medium">{totalPages}</span>
@@ -96,7 +96,7 @@ function Pagination({
             page > 1 ? `${hrefBase}${buildQueryString(baseParams, { page: String(page - 1) })}` : "#"
           }
           aria-disabled={page <= 1}
-          className={`rounded-md border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+          className={`rounded-md border px-4 py-2 ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
         >
           Previous
         </Link>
@@ -107,7 +107,7 @@ function Pagination({
               : "#"
           }
           aria-disabled={page >= totalPages}
-          className={`rounded-md border px-3 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
+          className={`rounded-md border px-4 py-2 ${page >= totalPages ? "pointer-events-none opacity-50" : ""}`}
         >
           Next
         </Link>
@@ -119,21 +119,23 @@ function Pagination({
 function Tabs({ current, baseParams }: { current: Tab; baseParams: Record<string, string | undefined> }) {
   const tabs: Tab[] = ["proposals", "contracts", "invoices"];
   return (
-    <div className="flex gap-2 border-b">
-      {tabs.map((t) => {
-        const active = current === t;
-        return (
-          <Link
-            key={t}
-            href={`/history${buildQueryString(baseParams, { t })}`}
-            className={`px-3 py-2 border-b-2 ${
-              active ? "border-black font-semibold" : "border-transparent text-muted-foreground"
-            }`}
-          >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </Link>
-        );
-      })}
+    <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+      <div className="flex gap-2 border-b min-w-max">
+        {tabs.map((t) => {
+          const active = current === t;
+          return (
+            <Link
+              key={t}
+              href={`/history${buildQueryString(baseParams, { t })}`}
+              className={`px-3 py-2 border-b-2 whitespace-nowrap ${
+                active ? "border-black font-semibold" : "border-transparent text-muted-foreground"
+              }`}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -151,8 +153,8 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
 
   if (!authUser) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">History</h1>
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">History</h1>
         <Card>
           <CardContent className="p-6 text-sm">
             Please <Link href="/login" className="text-blue-600 hover:underline">sign in</Link> to view your history.
@@ -173,8 +175,8 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
 
   if (!me) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">History</h1>
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">History</h1>
         <Card>
           <CardContent className="p-6 text-sm">
             We couldn’t find your account record. If this persists, contact support.
@@ -201,8 +203,8 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
   };
 
   const header = (
-    <div className="flex items-center justify-between">
-      <h1 className="text-3xl font-bold">History</h1>
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <h1 className="text-2xl sm:text-3xl font-bold">History</h1>
       <div className="text-sm text-muted-foreground">Your recent activity</div>
     </div>
   );
@@ -245,12 +247,54 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
         {header}
         <Tabs current={t} baseParams={baseParams} />
 
-        <Card>
-          <CardContent className="p-0">
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {rows.length ? rows.map((r) => {
+            const pr = projMap.get(r.project_id);
+            const price =
+              r.proposed_amount != null
+                ? `${r.proposed_amount} DZD (fixed)`
+                : r.proposed_hourly != null
+                ? `${r.proposed_hourly} DZD/h`
+                : "—";
+            return (
+              <Card key={r.id}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium line-clamp-2">
+                      {pr ? (
+                        <Link href={`/projects/${pr.id}`} className="hover:underline">
+                          {pr.title}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">[deleted project]</span>
+                      )}
+                    </div>
+                    {statusBadge(r.status, ["rejected", "withdrawn"])}
+                  </div>
+                  {r.cover_letter ? (
+                    <p className="text-sm text-muted-foreground line-clamp-2">{r.cover_letter}</p>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    <span className="rounded border px-2 py-1">{price}</span>
+                    <span className="rounded border px-2 py-1">Est: {r.est_days ?? "—"} days</span>
+                    <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No proposals yet.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -289,9 +333,7 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
                           )}
                         </TableCell>
                         <TableCell>{r.est_days ?? "—"}</TableCell>
-                        <TableCell>
-                          {statusBadge(r.status, ["rejected", "withdrawn"])}
-                        </TableCell>
+                        <TableCell>{statusBadge(r.status, ["rejected", "withdrawn"])}</TableCell>
                         <TableCell>{new Date(r.created_at).toLocaleString()}</TableCell>
                       </TableRow>
                     );
@@ -350,38 +392,81 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
     const total = count ?? 0;
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-    return (
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {header}
-        <div className="flex items-center justify-between">
-          <Tabs current={t} baseParams={baseParams} />
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Role</span>
-            <div className="inline-flex rounded-md border p-1">
-              <Link
-                href={`/history${buildQueryString(baseParams, { r: "" })}`}
-                className={`px-3 py-1.5 text-sm rounded-md ${roleFilter === "" ? "bg-black text-white" : ""}`}
-              >
-                All
-              </Link>
-              <Link
-                href={`/history${buildQueryString(baseParams, { r: "buyer" })}`}
-                className={`px-3 py-1.5 text-sm rounded-md ${roleFilter === "buyer" ? "bg-black text-white" : ""}`}
-              >
-                Buyer
-              </Link>
-              <Link
-                href={`/history${buildQueryString(baseParams, { r: "provider" })}`}
-                className={`px-3 py-1.5 text-sm rounded-md ${roleFilter === "provider" ? "bg-black text-white" : ""}`}
-              >
-                Provider
-              </Link>
-            </div>
+    const rolePills = (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Role</span>
+          <div className="inline-flex rounded-md border p-1">
+            <Link
+              href={`/history${buildQueryString(baseParams, { r: "" })}`}
+              className={`px-3 py-1.5 text-sm rounded-md ${roleFilter === "" ? "bg-black text-white" : ""}`}
+            >
+              All
+            </Link>
+            <Link
+              href={`/history${buildQueryString(baseParams, { r: "buyer" })}`}
+              className={`px-3 py-1.5 text-sm rounded-md ${roleFilter === "buyer" ? "bg-black text-white" : ""}`}
+            >
+              Buyer
+            </Link>
+            <Link
+              href={`/history${buildQueryString(baseParams, { r: "provider" })}`}
+              className={`px-3 py-1.5 text-sm rounded-md ${roleFilter === "provider" ? "bg-black text-white" : ""}`}
+            >
+              Provider
+            </Link>
           </div>
         </div>
+      </div>
+    );
 
-        <Card>
-          <CardContent className="p-0">
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        {header}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Tabs current={t} baseParams={baseParams} />
+          {rolePills}
+        </div>
+
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {rows.length ? rows.map((c) => {
+            const pr = projMap.get(c.project_id);
+            const terms = c.is_hourly ? (c.rate != null ? `${c.rate} DZD/h` : "—") : (c.fixed_amount != null ? `${c.fixed_amount} DZD` : "—");
+            return (
+              <Card key={c.id}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium line-clamp-2">
+                      {pr ? (
+                        <Link href={`/projects/${pr.id}`} className="hover:underline">
+                          {pr.title}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">[deleted project]</span>
+                      )}
+                    </div>
+                    {statusBadge(c.status, ["on_hold", "cancelled", "disputed"])}
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    <span className="rounded border px-2 py-1">{terms}</span>
+                    <span className="rounded border px-2 py-1">
+                      Role: <span className="font-medium">{c.buyer_id === me.id ? "Buyer" : "Provider"}</span>
+                    </span>
+                    <span className="text-muted-foreground">Start: {new Date(c.started_at).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">End: {c.completed_at ? new Date(c.completed_at).toLocaleDateString() : "—"}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No contracts found.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -458,9 +543,9 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
 
     if (!contractIds.length) {
       return (
-        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
           {header}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Tabs current={t} baseParams={baseParams} />
             <div className="inline-flex rounded-md border p-1">
               <Link
@@ -541,9 +626,9 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
         {header}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Tabs current={t} baseParams={baseParams} />
           <div className="inline-flex rounded-md border p-1">
             <Link
@@ -567,8 +652,49 @@ export default async function HistoryPage({ searchParams }: { searchParams?: Sea
           </div>
         </div>
 
-        <Card>
-          <CardContent className="p-0">
+        {/* Mobile cards */}
+        <div className="grid sm:hidden gap-3">
+          {rows.length ? rows.map((inv) => {
+            const c = contractMap.get(inv.contract_id);
+            const pr = c ? projMap.get(c.project_id) : undefined;
+            return (
+              <Card key={inv.id}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium line-clamp-2">
+                      {pr ? (
+                        <Link href={`/projects/${pr.id}`} className="hover:underline">
+                          {pr.title}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">[unknown project]</span>
+                      )}
+                    </div>
+                    {statusBadge(inv.status, ["draft", "void"])}
+                  </div>
+                  {c ? (
+                    <div className="text-xs text-muted-foreground">
+                      Role: <Badge variant="outline">{c.role}</Badge>
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    <span className="rounded border px-2 py-1">
+                      {inv.amount.toLocaleString()} {inv.currency}
+                    </span>
+                    <span className="text-muted-foreground">Issued: {new Date(inv.issued_at).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">Paid: {inv.paid_at ? new Date(inv.paid_at).toLocaleDateString() : "—"}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }) : (
+            <Card><CardContent className="p-6 text-center text-muted-foreground">No invoices found.</CardContent></Card>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <Card className="hidden sm:block">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
