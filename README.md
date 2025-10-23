@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Skilink
 
-## Getting Started
+Skilink is a modern, skill-driven platform that connects people through what they can do, not just where they have worked.  
+It is the evolution of CareerConnect, redesigned to provide a simpler, more inclusive, and locally focused experience for users seeking or offering services.
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Skilink bridges the gap between individuals and opportunities by allowing users to showcase their skills, connect with others, and collaborate on projects.  
+The platform aims to make professional networking accessible and transparent, with a strong emphasis on privacy, usability, and community.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Whether you are a student, freelancer, or business owner, Skilink helps you display your capabilities, discover new opportunities, and build meaningful professional relationships.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Skill-Based Profiles  
+  Users can create detailed profiles focused on their skills, experience, and achievements.
 
-## Learn More
+- Two-Sided Marketplace  
+  Task seekers can post what they need, and skill providers can offer their services.
 
-To learn more about Next.js, take a look at the following resources:
+- Smart Matching and Search  
+  Advanced filtering and ranking to help connect users efficiently.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Privacy and Security  
+  Users have full control over their data and visibility.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Community and Collaboration  
+  Built to encourage cross-sector connections, mentorship, and long-term partnerships.
 
-## Deploy on Vercel
+## Technology Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Frontend: Next.js 15, Tailwind CSS v4, Framer Motion  
+- Backend: Supabase (PostgreSQL, Authentication, Policies)  
+- Hosting: Vercel  
+- Version Control: Git and GitHub  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Installation
+
+1. Clone the repository:
+   git clone https://github.com/sharafedd/skilink.git
+   cd skilink
+
+2. Install dependencies:
+   npm install
+
+3. Create a .env.local file and add your Supabase credentials:
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+4. Run the development server:
+   npm run dev
+
+5. Open your browser and visit:
+   http://localhost:3000
+
+## Roadmap
+
+- Core platform (profiles, authentication, posting)
+- Analytics dashboard for service providers
+- Mobile application using React Native
+- AI-powered skill and opportunity recommendations
+- Integrated payment system through Karta
+
+## Privacy
+
+User privacy and data security are at the centre of Skilink.  
+All data is stored securely, with strict control over visibility and data-sharing preferences.
+
+## License
+
+This project is licensed under the MIT License.
